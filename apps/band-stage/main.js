@@ -133,6 +133,13 @@ const shatterEffects = {
   drum: null,
 };
 
+// Appear effects for each instrument
+const appearEffects = {
+  guitar: null,
+  bass: null,
+  drum: null,
+};
+
 // BLE MIDI Handler
 class BandStageMidiHandler {
   constructor() {
@@ -347,6 +354,91 @@ class InstrumentSyncEffect {
     if (this.gvrm && this.gvrm.character && this.gvrm.character.action) {
       this.gvrm.character.action.timeScale = 1.0;
     }
+  }
+}
+
+// Appear effect when avatar appears (fall from above)
+class AppearEffect {
+  constructor(gvrm, targetPosition) {
+    this.gvrm = gvrm;
+    this.targetPosition = targetPosition.clone();
+    this.isActive = false;
+    this.startTime = null;
+    this.duration = 200; // milliseconds
+    this.startY = 3; // Start 3 meters above target
+  }
+
+  start() {
+    if (!this.gvrm || !this.gvrm.character || !this.gvrm.character.currentVrm) {
+      console.warn('GVRM not ready for appear effect');
+      return;
+    }
+
+    this.isActive = true;
+    this.startTime = performance.now();
+
+    // Set initial position (above target)
+    if (this.gvrm.character && this.gvrm.character.currentVrm) {
+      this.gvrm.character.currentVrm.scene.position.set(
+        this.targetPosition.x,
+        this.targetPosition.y + this.startY,
+        this.targetPosition.z
+      );
+    }
+    if (this.gvrm.gs && this.gvrm.gs.viewer) {
+      this.gvrm.gs.viewer.position.set(
+        this.targetPosition.x,
+        this.targetPosition.y + this.startY,
+        this.targetPosition.z
+      );
+    }
+
+    console.log(`[Appear] Effect started - falling from above`);
+  }
+
+  update() {
+    if (!this.isActive) return false;
+
+    const elapsed = performance.now() - this.startTime;
+    const progress = Math.min(elapsed / this.duration, 1.0);
+
+    // Easing function (ease out cubic)
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    // Calculate current Y position
+    const currentY = this.targetPosition.y + this.startY * (1 - eased);
+
+    // Update VRM position
+    if (this.gvrm.character && this.gvrm.character.currentVrm) {
+      this.gvrm.character.currentVrm.scene.position.y = currentY;
+    }
+
+    // Update Gaussian Splat position
+    if (this.gvrm.gs && this.gvrm.gs.viewer) {
+      this.gvrm.gs.viewer.position.y = currentY;
+    }
+
+    // Check if complete
+    if (progress >= 1.0) {
+      this.complete();
+      return true;
+    }
+
+    return false;
+  }
+
+  complete() {
+    this.isActive = false;
+
+    // Ensure final position is exactly the target
+    if (this.gvrm.character && this.gvrm.character.currentVrm) {
+      this.gvrm.character.currentVrm.scene.position.y = this.targetPosition.y;
+    }
+    if (this.gvrm.gs && this.gvrm.gs.viewer) {
+      this.gvrm.gs.viewer.position.y = this.targetPosition.y;
+    }
+
+    console.log(`[Appear] Effect complete`);
   }
 }
 
@@ -736,9 +828,36 @@ async function loadAvatars() {
     Math.PI // 180 degrees rotation
   );
 
+  // Create appear effects
+  appearEffects.guitar = new AppearEffect(
+    avatarInstances.guitar,
+    new THREE.Vector3(
+      avatarPositions.guitar.x,
+      avatarPositions.guitar.y,
+      avatarPositions.guitar.z
+    )
+  );
+  appearEffects.bass = new AppearEffect(
+    avatarInstances.bass,
+    new THREE.Vector3(
+      avatarPositions.bass.x,
+      avatarPositions.bass.y,
+      avatarPositions.bass.z
+    )
+  );
+  appearEffects.drum = new AppearEffect(
+    avatarInstances.drum,
+    new THREE.Vector3(
+      avatarPositions.drum.x,
+      avatarPositions.drum.y,
+      avatarPositions.drum.z
+    )
+  );
+
   console.log("All avatars loaded");
   console.log("MIDI sync effects initialized");
   console.log("Shatter effects initialized");
+  console.log("Appear effects initialized");
 }
 
 // Initialize MIDI
@@ -769,6 +888,10 @@ async function initializeMIDI() {
       if (shatterEffects.guitar) {
         shatterEffects.guitar.reset();
       }
+      // Start appear effect (fall from above)
+      if (appearEffects.guitar) {
+        appearEffects.guitar.start();
+      }
       if (avatarInstances.guitar) {
         // Show VRM scene
         if (
@@ -798,6 +921,10 @@ async function initializeMIDI() {
       if (shatterEffects.bass) {
         shatterEffects.bass.reset();
       }
+      // Start appear effect (fall from above)
+      if (appearEffects.bass) {
+        appearEffects.bass.start();
+      }
       if (avatarInstances.bass) {
         // Show VRM scene
         if (
@@ -826,6 +953,10 @@ async function initializeMIDI() {
       // Always reset position (whether effect is active or completed)
       if (shatterEffects.drum) {
         shatterEffects.drum.reset();
+      }
+      // Start appear effect (fall from above)
+      if (appearEffects.drum) {
+        appearEffects.drum.start();
       }
       if (avatarInstances.drum) {
         // Show VRM scene
@@ -930,6 +1061,17 @@ function animate() {
       avatarInstances.vocal.changeFBX(animations.idle);
       console.log("Vocal switched back to Idle");
     }
+  }
+
+  // Update appear effects
+  if (appearEffects.guitar && appearEffects.guitar.isActive) {
+    appearEffects.guitar.update();
+  }
+  if (appearEffects.bass && appearEffects.bass.isActive) {
+    appearEffects.bass.update();
+  }
+  if (appearEffects.drum && appearEffects.drum.isActive) {
+    appearEffects.drum.update();
   }
 
   // Update shatter effects
