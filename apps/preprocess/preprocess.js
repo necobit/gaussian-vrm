@@ -342,7 +342,7 @@ async function cleanSplats(gsPath, loadingSpinner, hints = null, scene = null, c
     if (testFilteredVertices.length < 10000 ||
       heightDifference <= 0.3 ||  // PARAM (default: 0.5)
       (outerRingVertices.length > 10 && outerRingRatio > 0.00025)) {
-      if (distXZ < 3.0) {
+      if (distXZ < 5.0) {  // Increased from 3.0 to 5.0 for larger scan data
         distXZ += 0.1;
         console.log(`calculateHeights: adjusting search area. points: ${testFilteredVertices.length}, ` +
           `height diff: ${heightDifference.toFixed(2)}, outer ratio: ${outerRingRatio.toFixed(4)}. ` +

@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**gs-edit** is a web-based 3D application that combines Gaussian Splatting (3DGS) point clouds with VRM (Virtual Reality Model) characters to create animated rigged avatars. The system processes PLY files containing Gaussian splats and binds them to VRM character skeletons, enabling real-time animation of photorealistic 3D scans.
+**Gaussian-VRM (GVRM)** is the official implementation of **Instant Skinned Gaussian Avatars for Web, Mobile and VR Applications** (SUI 2025 Demo Track). It's a web-based 3D application built on Three.js that combines Gaussian Splatting (3DGS) point clouds with VRM (Virtual Reality Model) characters to create animated rigged avatars. The system processes PLY files containing Gaussian splats and binds them to VRM character skeletons, enabling real-time animation of photorealistic 3D scans.
+
+**Project Links:**
+- Project Page: https://gaussian-vrm.github.io/
+- Live Demo: https://naruya.github.io/gaussian-vrm/
+- arXiv Paper: https://arxiv.org/abs/2510.13978
 
 ## Core Technology Stack
 
@@ -70,17 +75,40 @@ error.js              # Error logging and reporting utilities
 
 **Dynamic Scene Sorting**: Splats are split into multiple Three.js scenes, grouped by bone or vertex indices, to optimize rendering and enable per-bone transformations.
 
+## Quick Start
+
+The simplest way to understand GVRM usage is through the examples:
+
+```javascript
+// Load GVRM file, apply animation, and update every frame
+const gvrm = await GVRM.load('./assets/sample.gvrm', scene, camera, renderer);
+await gvrm.changeFBX('./assets/Idle.fbx');
+
+renderer.setAnimationLoop(() => {
+  gvrm.update();
+  renderer.render(scene, camera);
+});
+```
+
+**See the `examples/` directory for complete working examples**, including:
+- `simple-viewer.html` - Basic GVRM loading and viewing
+- `simple-viewer2.html` - With camera controls
+- `simple-walker.html` - Autonomous walking avatar
+- `simple-key-walker.html` - WASD keyboard controls
+
+Full examples documentation: `examples/README.md`
+
 ## Development Commands
 
 ### Running the Application
 
 **Prerequisites**:
-- Node.js and npm installed
-- Express.js: `npm install -g express` (or install locally)
+- Node.js installed
+- Express.js: `npm install -g express` (or use `npx`)
 
-**SSL Certificate Setup** (required for HTTPS):
+**IMPORTANT - SSL Certificate Setup** (HTTPS is required):
 ```bash
-# Generate self-signed certificates
+# Generate self-signed certificates (required for WebRTC, TensorFlow.js, and camera features)
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
 mkdir -p .server
 mv *.pem .server/
@@ -88,14 +116,15 @@ mv *.pem .server/
 
 **Start Development Server**:
 ```bash
-# Start HTTPS development server (required for WebRTC and some browser features)
+# Start HTTPS development server
 node server.js
 # Access at https://localhost:8080
+# Note: You'll need to accept the self-signed certificate warning in your browser
 ```
 
 **Applications**:
 - Main editor: `https://localhost:8080/`
-- Simple viewer: `https://localhost:8080/examples/simple-viewer.html`
+- Simple viewer examples: `https://localhost:8080/examples/simple-viewer.html`
 - Avatar World demo: `https://localhost:8080/apps/avatarworld/`
 
 ### Loading Files
@@ -259,9 +288,9 @@ Applied in `Utils.applyBoneOperations()` (utils.js:24-52)
 ### Known Limitations
 
 - A-pose required for preprocessing (arms spread, legs straight)
-- Single character per scene (multi-character not supported)
 - VRM model must have standard humanoid bone names
-- Some VRM models require `skinnedMeshIndex` adjustment (gvrm.js:19-24)
+- Some VRM models require `skinnedMeshIndex` adjustment (gvrm.js:33-38)
+- Mobile device preprocessing not currently supported (viewing GVRM files works on mobile)
 
 ## File Format Specifications
 
@@ -305,3 +334,17 @@ The `apps/avatarworld/` directory contains a demo application showcasing multipl
 - **Scene.js**: Creates 3D environment (sky, procedural houses, particle floor effects)
 - Features multiple GVRM avatars walking independently in a shared scene
 - Demonstrates GVRM's capability for multi-character scenes and character AI
+
+## Sample Data
+
+Sample avatars and scan data are available on Google Drive:
+- Link: https://drive.google.com/drive/folders/1R9QXjUiDZf0vo7E4GnmnvyB_KB9-N2F8
+- Released under MIT License (with public order/morality restrictions)
+- Use Mixamo (https://www.mixamo.com/) for additional FBX animation files
+  - Recommended settings: FBX ASCII, Without Skin, 60 FPS, No Keyframe Reduction
+
+## License Notes
+
+- **Source code**: MIT License (no SMPL, deep learning models, or restrictive licenses)
+- **Assets directory** (`./assets/` and `./examples/assets/`): Research use only, not redistributable without permission
+- Sample avatars from Google Drive: Separate MIT License (see Sample Data section)

@@ -67,6 +67,8 @@
       line-height: 1.8;
       display: none;
       max-width: 320px;
+      max-height: calc(100vh - 440px);
+      overflow-y: auto;
       font-family: monospace;
     }
 
@@ -109,6 +111,8 @@
       line-height: 1.6;
       display: none;
       max-width: 320px;
+      max-height: calc(100vh - 420px);
+      overflow-y: auto;
       font-family: monospace;
     }
 
@@ -402,7 +406,8 @@
 
 <body>
   <div id="info" class="info">
-    FPS: <span id="fpsdisplay" style="display: inline;"></span>
+    FPS: <span id="fpsdisplay" style="display: inline;"></span><br>
+    <span id="midi-status" style="color: #888; font-size: 11px;">MIDI: Not initialized</span>
   </div>
 
   <div id="command-list">
@@ -573,6 +578,14 @@
       <div class="gvrm-item" data-gvrm="sample9">
         <video src="./assets/sample9.mp4" autoplay loop muted playsinline></video>
         <div class="gvrm-name">sample9</div>
+      </div>
+      <div class="gvrm-item" data-gvrm="necobut">
+        <video src="./assets/sample1.mp4" autoplay loop muted playsinline style="opacity: 0.7;"></video>
+        <div class="gvrm-name">necobut</div>
+      </div>
+      <div class="gvrm-item" data-gvrm="goroman">
+        <video src="./assets/sample1.mp4" autoplay loop muted playsinline style="opacity: 0.7;"></video>
+        <div class="gvrm-name">goroman</div>
       </div>
     </div>
 

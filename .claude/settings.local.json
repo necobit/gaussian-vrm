@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(openssl req:*)",
+      "Bash(node:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(npx --yes http-server:*)",
+      "WebSearch",
+      "WebFetch(domain:unsplash.com)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

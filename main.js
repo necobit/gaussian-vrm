@@ -8,6 +8,7 @@ import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { preprocess } from './apps/preprocess/preprocess.js';
 import { GVRM, GVRMUtils } from './gvrm-format/gvrm.js';
 import { FPSCounter } from './apps/fps.js';
+import { BLEMidiHandler, AvatarShakeEffect, SillyDancingSyncEffect } from './apps/ble-midi.js';
 // import { setupVR } from './apps/vr.js';
 
 
@@ -99,7 +100,12 @@ async function setupPathsFromUrlOrSelect() {
       // View Sample Avatarsボタンのクリックハンドラ
       viewSampleAvatarsButton.addEventListener('click', () => {
         if (selectedGvrm) {
-          gvrmPath = `./assets/${selectedGvrm}.gvrm`;
+          // Check if it's necobut or goroman (from samples folder)
+          if (selectedGvrm === 'necobut' || selectedGvrm === 'goroman') {
+            gvrmPath = `./samples/${selectedGvrm}.gvrm`;
+          } else {
+            gvrmPath = `./assets/${selectedGvrm}.gvrm`;
+          }
 
           selectContainer.style.display = 'none';
           selectBackground.style.display = 'none';
@@ -140,10 +146,9 @@ async function setupPathsFromUrlOrSelect() {
       // サンプル選択ボタンのクリックハンドラ
       selectSampleButton.addEventListener('click', () => {
         if (selectedSample) {
-          // TODO: サンプルファイル選択後の処理をここに実装
           console.log('Selected sample:', selectedSample);
 
-          // 仮の実装: サンプルのPLYファイルパスを設定
+          // All PLY samples are in assets folder
           gsPath = `./assets/${selectedSample}.ply`;
           gsFileName = `${selectedSample}.ply`;
 
@@ -216,7 +221,37 @@ controls2.update();
 
 // scene
 const scene = new THREE.Scene();
+
+// Load live stage background image
+const textureLoader = new THREE.TextureLoader();
+
+// Stage background options (change the URL to switch backgrounds):
+// Option 1: Purple/pink concert stage with dramatic lighting
+const stageBackgroundUrl = 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1920&q=80';
+// Option 2: Blue stage lights and audience
+// const stageBackgroundUrl = 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1920&q=80';
+// Option 3: Red/orange concert atmosphere
+// const stageBackgroundUrl = 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1920&q=80';
+// Option 4: Colorful light show
+// const stageBackgroundUrl = 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=80';
+// Option 5: Stage with crowd silhouettes
+// const stageBackgroundUrl = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1920&q=80';
+textureLoader.load(
+  stageBackgroundUrl,
+  (texture) => {
+    scene.background = texture;
+    console.log('Stage background loaded successfully');
+  },
+  undefined,
+  (error) => {
+    console.error('Failed to load stage background, using black:', error);
+    scene.background = new THREE.Color(0x000000);
+  }
+);
+
+// Fallback: black background until image loads
 scene.background = new THREE.Color(0x000000);
+
 const light = new THREE.DirectionalLight(0xffffff, Math.PI);
 light.position.set(10.0, 10.0, 10.0);
 scene.add(light);
@@ -226,17 +261,23 @@ scene.add(light);
 // scene.add(gridHelper);
 
 
-const gvrmFiles = [
-  './assets/sample1.gvrm',
-  './assets/sample2.gvrm',
-  './assets/sample3.gvrm',
-  './assets/sample4.gvrm',
-  './assets/sample5.gvrm',
-  './assets/sample6.gvrm',
-  './assets/sample7.gvrm',
-  './assets/sample8.gvrm',
-  './assets/sample9.gvrm'
+// Avatar files list - all GVRM files
+const avatarFiles = [
+  { path: './assets/sample1.gvrm', type: 'gvrm', name: 'sample1' },
+  { path: './assets/sample2.gvrm', type: 'gvrm', name: 'sample2' },
+  { path: './assets/sample3.gvrm', type: 'gvrm', name: 'sample3' },
+  { path: './assets/sample4.gvrm', type: 'gvrm', name: 'sample4' },
+  { path: './assets/sample5.gvrm', type: 'gvrm', name: 'sample5' },
+  { path: './assets/sample6.gvrm', type: 'gvrm', name: 'sample6' },
+  { path: './assets/sample7.gvrm', type: 'gvrm', name: 'sample7' },
+  { path: './assets/sample8.gvrm', type: 'gvrm', name: 'sample8' },
+  { path: './assets/sample9.gvrm', type: 'gvrm', name: 'sample9' },
+  { path: './samples/necobut.gvrm', type: 'gvrm', name: 'necobut' },
+  { path: './samples/goroman.gvrm', type: 'gvrm', name: 'goroman' }
 ];
+
+// Legacy gvrmFiles array for backward compatibility
+const gvrmFiles = avatarFiles.map(f => f.path);
 
 const fbxFiles = [
   './assets/Idle.fbx',
@@ -251,6 +292,7 @@ const fbxFiles = [
   './assets/Listening.fbx',
   './assets/Pointing.fbx',
   './assets/Shrugging.fbx',
+  './assets/Silly Dancing.fbx',
   './assets/Warrior.fbx'
 ];
 
@@ -261,6 +303,61 @@ let vrControllers = null;
 let gvrm;
 let stateAnim = "play";
 
+// BLE MIDI
+let bleMidiHandler = null;
+let avatarShakeEffect = null;
+let sillyDancingSyncEffect = null;
+
+// Initialize BLE MIDI for all avatars
+async function initializeBLEMidi() {
+  if (!gvrm) {
+    console.warn("GVRM not ready for BLE MIDI initialization");
+    return;
+  }
+
+  console.log("Initializing BLE MIDI for avatar...");
+
+  // Create BLE MIDI handler
+  bleMidiHandler = new BLEMidiHandler("KANTAN-Play");
+  avatarShakeEffect = new AvatarShakeEffect(gvrm);
+  sillyDancingSyncEffect = new SillyDancingSyncEffect(gvrm);
+
+  // Set up status callback
+  bleMidiHandler.setStatusCallback((message, connected) => {
+    console.log(`MIDI Status: ${message}`);
+    const statusEl = document.getElementById('midi-status');
+    if (statusEl) {
+      statusEl.textContent = message;
+      statusEl.style.color = connected ? '#4CAF50' : '#888';
+    }
+  });
+
+  // Set up note callback
+  bleMidiHandler.setNoteCallback((channel, note, velocity) => {
+    console.log(`MIDI trigger (Ch${channel + 1}, Note ${note}, Vel ${velocity})`);
+
+    // Check if current animation is Silly Dancing
+    const currentAnimationName = fbxFiles[currentFbxIndex];
+    const isSillyDancing = currentAnimationName && currentAnimationName.includes('Silly Dancing');
+
+    if (isSillyDancing) {
+      console.log("Using Silly Dancing sync effect with head scale");
+      sillyDancingSyncEffect.onMidiTrigger(avatarShakeEffect);
+    } else {
+      console.log("Using head scale effect");
+      avatarShakeEffect.shake();
+    }
+  });
+
+  // Initialize MIDI connection
+  const success = await bleMidiHandler.initialize();
+  if (success) {
+    console.log("BLE MIDI initialized successfully");
+  } else {
+    console.error("Failed to initialize BLE MIDI");
+  }
+}
+
 // Function to update status list
 function updateStatusList() {
   const avatarListEl = document.getElementById('avatar-list');
@@ -268,14 +365,13 @@ function updateStatusList() {
 
   // Update avatar list
   avatarListEl.innerHTML = '';
-  gvrmFiles.forEach((file, index) => {
+  avatarFiles.forEach((avatar, index) => {
     const item = document.createElement('div');
     item.className = 'status-item';
     if (index === currentGvrmIndex) {
       item.classList.add('active');
     }
-    const name = file.split('/').pop().replace('.gvrm', '');
-    item.textContent = `${index + 1}. ${name}`;
+    item.textContent = `${index + 1}. ${avatar.name}`;
     avatarListEl.appendChild(item);
   });
 
@@ -351,7 +447,7 @@ if (gvrmPath) {
   }
 
   // Set currentGvrmIndex based on loaded file
-  const gvrmIndex = gvrmFiles.findIndex(file => gvrmPath.includes(file.split('/').pop()));
+  const gvrmIndex = avatarFiles.findIndex(avatar => gvrmPath.includes(avatar.name));
   if (gvrmIndex !== -1) {
     currentGvrmIndex = gvrmIndex;
   }
@@ -371,6 +467,9 @@ if (gvrmPath) {
 
     // Show control buttons
     showControlButtons();
+
+    // Initialize BLE MIDI
+    initializeBLEMidi();
   });
 } else if (gsPath) {
   if (!gsFileName) {
@@ -384,8 +483,8 @@ if (gvrmPath) {
   }
 
   // Set currentGvrmIndex based on loaded file
-  const gvrmFileName = gsPath.split('/').pop().replace('.ply', '.gvrm');
-  const gvrmIndex = gvrmFiles.findIndex(file => file.includes(gvrmFileName));
+  const plyFileName = gsPath.split('/').pop().replace('.ply', '');
+  const gvrmIndex = avatarFiles.findIndex(avatar => avatar.name === plyFileName);
   if (gvrmIndex !== -1) {
     currentGvrmIndex = gvrmIndex;
   }
@@ -410,6 +509,9 @@ if (gvrmPath) {
 
       // Show control buttons
       showControlButtons();
+
+      // Initialize BLE MIDI
+      initializeBLEMidi();
     });
   });
 }
@@ -488,16 +590,36 @@ window.addEventListener('keydown', function (event) {
 window.addEventListener('keydown', async function (event) {
   if (event.code === "KeyG") {
     if (!gvrm || !gvrm.isReady || gvrm.character.isLoading()) return;
-    currentGvrmIndex = (currentGvrmIndex + 1) % gvrmFiles.length;
+    currentGvrmIndex = (currentGvrmIndex + 1) % avatarFiles.length;
     updateStatusList();
+
+    const currentAvatar = avatarFiles[currentGvrmIndex];
     await gvrm.remove(scene);
-    await gvrm.load(gvrmFiles[currentGvrmIndex], scene, camera, renderer, fileName);
+
+    // Disconnect current BLE MIDI before switching
+    if (bleMidiHandler) {
+      bleMidiHandler.disconnect();
+    }
+
+    // Load GVRM file
+    console.log(`Loading GVRM file: ${currentAvatar.path}`);
+    fileName = currentAvatar.path;
+
+    await gvrm.load(currentAvatar.path, scene, camera, renderer, fileName);
     await gvrm.changeFBX(fbxFiles[currentFbxIndex]);
+
+    // Reinitialize BLE MIDI
+    await initializeBLEMidi();
   }
   if (event.code === "KeyA") {
     currentFbxIndex = (currentFbxIndex + 1) % fbxFiles.length;
     updateStatusList();
     await gvrm.changeFBX(fbxFiles[currentFbxIndex]);
+
+    // Reset Silly Dancing sync when changing animation
+    if (sillyDancingSyncEffect) {
+      sillyDancingSyncEffect.reset();
+    }
   }
 });
 
@@ -513,11 +635,26 @@ window.addEventListener('keydown', async function (event) {
 // Mobile button handlers
 document.getElementById('mobile-switch-avatar').addEventListener('click', async function () {
   if (!gvrm || !gvrm.isReady) return;
-  currentGvrmIndex = (currentGvrmIndex + 1) % gvrmFiles.length;
+  currentGvrmIndex = (currentGvrmIndex + 1) % avatarFiles.length;
   updateStatusList();
+
+  const currentAvatar = avatarFiles[currentGvrmIndex];
   await gvrm.remove(scene);
-  await gvrm.load(gvrmFiles[currentGvrmIndex], scene, camera, renderer, fileName);
+
+  // Disconnect current BLE MIDI before switching
+  if (bleMidiHandler) {
+    bleMidiHandler.disconnect();
+  }
+
+  // Load GVRM file
+  console.log(`Loading GVRM file: ${currentAvatar.path}`);
+  fileName = currentAvatar.path;
+
+  await gvrm.load(currentAvatar.path, scene, camera, renderer, fileName);
   await gvrm.changeFBX(fbxFiles[currentFbxIndex]);
+
+  // Reinitialize BLE MIDI
+  await initializeBLEMidi();
 });
 
 document.getElementById('mobile-switch-animation').addEventListener('click', async function () {
@@ -525,6 +662,11 @@ document.getElementById('mobile-switch-animation').addEventListener('click', asy
   currentFbxIndex = (currentFbxIndex + 1) % fbxFiles.length;
   updateStatusList();
   await gvrm.changeFBX(fbxFiles[currentFbxIndex]);
+
+  // Reset Silly Dancing sync when changing animation
+  if (sillyDancingSyncEffect) {
+    sillyDancingSyncEffect.reset();
+  }
 });
 
 
