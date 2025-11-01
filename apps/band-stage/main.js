@@ -324,7 +324,14 @@ async function loadAvatars() {
     avatarPositions.guitar.y,
     avatarPositions.guitar.z
   );
+  // Hide VRM and Gaussian Splats
   avatarInstances.guitar.character.currentVrm.scene.visible = false;
+  if (avatarInstances.guitar.gsViewer) {
+    const viewers = avatarInstances.guitar.gsViewer.getViewers();
+    viewers.forEach(viewer => {
+      if (viewer.splatMesh) viewer.splatMesh.visible = false;
+    });
+  }
 
   // Load Bass
   avatarInstances.bass = new GVRM();
@@ -335,7 +342,14 @@ async function loadAvatars() {
     avatarPositions.bass.y,
     avatarPositions.bass.z
   );
+  // Hide VRM and Gaussian Splats
   avatarInstances.bass.character.currentVrm.scene.visible = false;
+  if (avatarInstances.bass.gsViewer) {
+    const viewers = avatarInstances.bass.gsViewer.getViewers();
+    viewers.forEach(viewer => {
+      if (viewer.splatMesh) viewer.splatMesh.visible = false;
+    });
+  }
 
   // Load Drum
   avatarInstances.drum = new GVRM();
@@ -346,7 +360,14 @@ async function loadAvatars() {
     avatarPositions.drum.y,
     avatarPositions.drum.z
   );
+  // Hide VRM and Gaussian Splats
   avatarInstances.drum.character.currentVrm.scene.visible = false;
+  if (avatarInstances.drum.gsViewer) {
+    const viewers = avatarInstances.drum.gsViewer.getViewers();
+    viewers.forEach(viewer => {
+      if (viewer.splatMesh) viewer.splatMesh.visible = false;
+    });
+  }
 
   console.log('All avatars loaded');
 }
@@ -374,7 +395,19 @@ async function initializeMIDI() {
       avatarVisibility.guitar = true;
       lastMidiTime.guitar = now;
       if (avatarInstances.guitar) {
-        avatarInstances.guitar.character.currentVrm.scene.visible = true;
+        // Show VRM scene
+        if (avatarInstances.guitar.character && avatarInstances.guitar.character.currentVrm) {
+          avatarInstances.guitar.character.currentVrm.scene.visible = true;
+        }
+        // Show Gaussian Splat scenes
+        if (avatarInstances.guitar.gsViewer) {
+          const viewers = avatarInstances.guitar.gsViewer.getViewers();
+          viewers.forEach(viewer => {
+            if (viewer.splatMesh) {
+              viewer.splatMesh.visible = true;
+            }
+          });
+        }
         document.getElementById('guitar-indicator').classList.add('active');
       }
       console.log(`Guitar timer updated: ${now.toFixed(0)}ms`);
@@ -385,7 +418,19 @@ async function initializeMIDI() {
       avatarVisibility.bass = true;
       lastMidiTime.bass = now;
       if (avatarInstances.bass) {
-        avatarInstances.bass.character.currentVrm.scene.visible = true;
+        // Show VRM scene
+        if (avatarInstances.bass.character && avatarInstances.bass.character.currentVrm) {
+          avatarInstances.bass.character.currentVrm.scene.visible = true;
+        }
+        // Show Gaussian Splat scenes
+        if (avatarInstances.bass.gsViewer) {
+          const viewers = avatarInstances.bass.gsViewer.getViewers();
+          viewers.forEach(viewer => {
+            if (viewer.splatMesh) {
+              viewer.splatMesh.visible = true;
+            }
+          });
+        }
         document.getElementById('bass-indicator').classList.add('active');
       }
       console.log(`Bass timer updated: ${now.toFixed(0)}ms`);
@@ -396,7 +441,19 @@ async function initializeMIDI() {
       avatarVisibility.drum = true;
       lastMidiTime.drum = now;
       if (avatarInstances.drum) {
-        avatarInstances.drum.character.currentVrm.scene.visible = true;
+        // Show VRM scene
+        if (avatarInstances.drum.character && avatarInstances.drum.character.currentVrm) {
+          avatarInstances.drum.character.currentVrm.scene.visible = true;
+        }
+        // Show Gaussian Splat scenes
+        if (avatarInstances.drum.gsViewer) {
+          const viewers = avatarInstances.drum.gsViewer.getViewers();
+          viewers.forEach(viewer => {
+            if (viewer.splatMesh) {
+              viewer.splatMesh.visible = true;
+            }
+          });
+        }
         document.getElementById('drum-indicator').classList.add('active');
       }
       console.log(`Drum timer updated: ${now.toFixed(0)}ms`);
@@ -428,11 +485,23 @@ function animate() {
     if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.guitar = false;
       if (avatarInstances.guitar) {
-        avatarInstances.guitar.character.currentVrm.scene.visible = false;
+        // Hide VRM scene
+        if (avatarInstances.guitar.character && avatarInstances.guitar.character.currentVrm) {
+          avatarInstances.guitar.character.currentVrm.scene.visible = false;
+        }
+        // Hide Gaussian Splat scenes
+        if (avatarInstances.guitar.gsViewer) {
+          const viewers = avatarInstances.guitar.gsViewer.getViewers();
+          viewers.forEach(viewer => {
+            if (viewer.splatMesh) {
+              viewer.splatMesh.visible = false;
+            }
+          });
+        }
         document.getElementById('guitar-indicator').classList.remove('active');
+        console.log(`Guitar hidden (timeout after ${elapsed.toFixed(0)}ms)`);
       }
       lastMidiTime.guitar = null; // Reset timer
-      console.log(`Guitar hidden (timeout after ${elapsed.toFixed(0)}ms)`);
     }
   }
 
@@ -442,11 +511,23 @@ function animate() {
     if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.bass = false;
       if (avatarInstances.bass) {
-        avatarInstances.bass.character.currentVrm.scene.visible = false;
+        // Hide VRM scene
+        if (avatarInstances.bass.character && avatarInstances.bass.character.currentVrm) {
+          avatarInstances.bass.character.currentVrm.scene.visible = false;
+        }
+        // Hide Gaussian Splat scenes
+        if (avatarInstances.bass.gsViewer) {
+          const viewers = avatarInstances.bass.gsViewer.getViewers();
+          viewers.forEach(viewer => {
+            if (viewer.splatMesh) {
+              viewer.splatMesh.visible = false;
+            }
+          });
+        }
         document.getElementById('bass-indicator').classList.remove('active');
+        console.log(`Bass hidden (timeout after ${elapsed.toFixed(0)}ms)`);
       }
       lastMidiTime.bass = null; // Reset timer
-      console.log(`Bass hidden (timeout after ${elapsed.toFixed(0)}ms)`);
     }
   }
 
@@ -456,11 +537,23 @@ function animate() {
     if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.drum = false;
       if (avatarInstances.drum) {
-        avatarInstances.drum.character.currentVrm.scene.visible = false;
+        // Hide VRM scene
+        if (avatarInstances.drum.character && avatarInstances.drum.character.currentVrm) {
+          avatarInstances.drum.character.currentVrm.scene.visible = false;
+        }
+        // Hide Gaussian Splat scenes
+        if (avatarInstances.drum.gsViewer) {
+          const viewers = avatarInstances.drum.gsViewer.getViewers();
+          viewers.forEach(viewer => {
+            if (viewer.splatMesh) {
+              viewer.splatMesh.visible = false;
+            }
+          });
+        }
         document.getElementById('drum-indicator').classList.remove('active');
+        console.log(`Drum hidden (timeout after ${elapsed.toFixed(0)}ms)`);
       }
       lastMidiTime.drum = null; // Reset timer
-      console.log(`Drum hidden (timeout after ${elapsed.toFixed(0)}ms)`);
     }
   }
 
