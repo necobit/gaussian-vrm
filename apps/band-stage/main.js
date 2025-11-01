@@ -358,7 +358,12 @@ class InstrumentSyncEffect {
 
   // Update method to stop animation before next target
   update() {
-    if (!this.isPlaying || !this.gvrm || !this.gvrm.character || !this.gvrm.character.action) {
+    if (
+      !this.isPlaying ||
+      !this.gvrm ||
+      !this.gvrm.character ||
+      !this.gvrm.character.action
+    ) {
       return;
     }
 
@@ -382,7 +387,11 @@ class InstrumentSyncEffect {
       action.timeScale = 0;
       this.isPlaying = false;
       console.log(
-        `[Sync] Stopped at frame ${currentFrame.toFixed(1)}, waiting for next MIDI (${distanceToNext.toFixed(2)} frames before target ${nextTargetFrame})`
+        `[Sync] Stopped at frame ${currentFrame.toFixed(
+          1
+        )}, waiting for next MIDI (${distanceToNext.toFixed(
+          2
+        )} frames before target ${nextTargetFrame})`
       );
     }
   }
@@ -437,20 +446,22 @@ class AppearEffect {
     }
 
     // Create white flash overlay
-    this.flashOverlay = document.createElement('div');
-    this.flashOverlay.style.position = 'fixed';
-    this.flashOverlay.style.top = '0';
-    this.flashOverlay.style.left = '0';
-    this.flashOverlay.style.width = '100%';
-    this.flashOverlay.style.height = '100%';
-    this.flashOverlay.style.backgroundColor = 'white';
-    this.flashOverlay.style.opacity = '1';
-    this.flashOverlay.style.pointerEvents = 'none';
-    this.flashOverlay.style.zIndex = '100';
+    this.flashOverlay = document.createElement("div");
+    this.flashOverlay.style.position = "fixed";
+    this.flashOverlay.style.top = "0";
+    this.flashOverlay.style.left = "0";
+    this.flashOverlay.style.width = "100%";
+    this.flashOverlay.style.height = "100%";
+    this.flashOverlay.style.backgroundColor = "white";
+    this.flashOverlay.style.opacity = "1";
+    this.flashOverlay.style.pointerEvents = "none";
+    this.flashOverlay.style.zIndex = "100";
     document.body.appendChild(this.flashOverlay);
     console.log(`[Appear] White flash overlay created`);
 
-    console.log(`[Appear] Effect started - falling from above with white flash over ${this.duration}ms`);
+    console.log(
+      `[Appear] Effect started - falling from above with white flash over ${this.duration}ms`
+    );
   }
 
   update() {
@@ -1324,7 +1335,7 @@ function startAutoCameraWork() {
 
   // Start first switch after 3 seconds
   autoCameraInterval = setTimeout(switchCamera, 3000);
-  console.log('[Auto Camera] Started');
+  console.log("[Auto Camera] Started");
 }
 
 // Stop auto camera work
@@ -1338,7 +1349,7 @@ function stopAutoCameraWork() {
     autoCameraInterval = null;
   }
 
-  console.log('[Auto Camera] Stopped');
+  console.log("[Auto Camera] Stopped");
 }
 
 // Keyboard controls for camera
@@ -1397,16 +1408,16 @@ window.addEventListener("resize", () => {
 });
 
 // Show member selection page (called from start page button)
-window.showMemberSelection = function() {
-  const startPage = document.getElementById('start-page');
-  const selectionModal = document.getElementById('selection-modal');
+window.showMemberSelection = function () {
+  const startPage = document.getElementById("start-page");
+  const selectionModal = document.getElementById("selection-modal");
 
   if (startPage) {
-    startPage.classList.add('hidden');
+    startPage.classList.add("hidden");
   }
   if (selectionModal) {
-    selectionModal.classList.remove('hidden');
+    selectionModal.classList.remove("hidden");
   }
 
-  console.log('[UI] Showing member selection page');
+  console.log("[UI] Showing member selection page");
 };
