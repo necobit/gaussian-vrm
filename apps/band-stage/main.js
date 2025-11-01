@@ -352,9 +352,10 @@ class InstrumentSyncEffect {
 
 // Shatter and fall effect when avatar disappears
 class ShatterEffect {
-  constructor(gvrm, originalPosition) {
+  constructor(gvrm, originalPosition, originalRotationY = 0) {
     this.gvrm = gvrm;
     this.originalPosition = originalPosition.clone();
+    this.originalRotationY = originalRotationY; // Store original Y rotation
     this.isActive = false;
     this.velocity = new THREE.Vector3();
     this.angularVelocity = new THREE.Vector3();
@@ -462,12 +463,12 @@ class ShatterEffect {
     if (this.gvrm.character && this.gvrm.character.currentVrm) {
       console.log(`[Shatter] Resetting VRM position from ${this.gvrm.character.currentVrm.scene.position.toArray()} to ${this.originalPosition.toArray()}`);
       this.gvrm.character.currentVrm.scene.position.copy(this.originalPosition);
-      this.gvrm.character.currentVrm.scene.rotation.set(0, 0, 0);
+      this.gvrm.character.currentVrm.scene.rotation.set(0, this.originalRotationY, 0);
     }
     if (this.gvrm.gs && this.gvrm.gs.viewer) {
       console.log(`[Shatter] Resetting GS position from ${this.gvrm.gs.viewer.position.toArray()} to ${this.originalPosition.toArray()}`);
       this.gvrm.gs.viewer.position.copy(this.originalPosition);
-      this.gvrm.gs.viewer.rotation.set(0, 0, 0);
+      this.gvrm.gs.viewer.rotation.set(0, this.originalRotationY, 0);
     }
 
     this.velocity.set(0, 0, 0);
@@ -640,6 +641,8 @@ async function loadAvatars() {
     avatarPositions.guitar.y,
     avatarPositions.guitar.z
   );
+  // Rotate to face forward
+  avatarInstances.guitar.character.currentVrm.scene.rotation.y = Math.PI;
   // Hide VRM and Gaussian Splat viewer
   avatarInstances.guitar.character.currentVrm.scene.visible = false;
   if (avatarInstances.guitar.gs && avatarInstances.guitar.gs.viewer) {
@@ -661,6 +664,8 @@ async function loadAvatars() {
     avatarPositions.bass.y,
     avatarPositions.bass.z
   );
+  // Rotate to face forward
+  avatarInstances.bass.character.currentVrm.scene.rotation.y = Math.PI;
   // Hide VRM and Gaussian Splat viewer
   avatarInstances.bass.character.currentVrm.scene.visible = false;
   if (avatarInstances.bass.gs && avatarInstances.bass.gs.viewer) {
@@ -682,6 +687,8 @@ async function loadAvatars() {
     avatarPositions.drum.y,
     avatarPositions.drum.z
   );
+  // Rotate to face forward
+  avatarInstances.drum.character.currentVrm.scene.rotation.y = Math.PI;
   // Hide VRM and Gaussian Splat viewer
   avatarInstances.drum.character.currentVrm.scene.visible = false;
   if (avatarInstances.drum.gs && avatarInstances.drum.gs.viewer) {
@@ -707,7 +714,8 @@ async function loadAvatars() {
       avatarPositions.guitar.x,
       avatarPositions.guitar.y,
       avatarPositions.guitar.z
-    )
+    ),
+    Math.PI // 180 degrees rotation
   );
   shatterEffects.bass = new ShatterEffect(
     avatarInstances.bass,
@@ -715,7 +723,8 @@ async function loadAvatars() {
       avatarPositions.bass.x,
       avatarPositions.bass.y,
       avatarPositions.bass.z
-    )
+    ),
+    Math.PI // 180 degrees rotation
   );
   shatterEffects.drum = new ShatterEffect(
     avatarInstances.drum,
@@ -723,7 +732,8 @@ async function loadAvatars() {
       avatarPositions.drum.x,
       avatarPositions.drum.y,
       avatarPositions.drum.z
-    )
+    ),
+    Math.PI // 180 degrees rotation
   );
 
   console.log("All avatars loaded");
