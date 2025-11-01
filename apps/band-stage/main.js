@@ -408,6 +408,55 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+// Camera presets
+const cameraPresets = {
+  stage: { position: { x: 0, y: 1.5, z: 5 }, target: { x: 0, y: 1, z: 0 } },
+  vocal: { position: { x: 0, y: 1.6, z: 2 }, target: { x: 0, y: 1.4, z: 0 } },
+  guitar: { position: { x: -2, y: 1.6, z: 1 }, target: { x: -2, y: 1.4, z: -1 } },
+  bass: { position: { x: 2, y: 1.6, z: 1 }, target: { x: 2, y: 1.4, z: -1 } },
+  drum: { position: { x: 0, y: 2, z: 0.5 }, target: { x: 0, y: 1.2, z: -2.5 } },
+  side: { position: { x: -4, y: 1.5, z: 0 }, target: { x: 0, y: 1, z: -1 } },
+  high: { position: { x: 0, y: 5, z: 3 }, target: { x: 0, y: 0, z: -1 } }
+};
+
+function setCameraPreset(presetName) {
+  const preset = cameraPresets[presetName];
+  if (!preset) return;
+
+  camera.position.set(preset.position.x, preset.position.y, preset.position.z);
+  controls.target.set(preset.target.x, preset.target.y, preset.target.z);
+  controls.update();
+
+  console.log(`Camera: ${presetName}`);
+}
+
+// Keyboard controls for camera
+window.addEventListener('keydown', (event) => {
+  switch(event.key) {
+    case '1':
+      setCameraPreset('stage');
+      break;
+    case '2':
+      setCameraPreset('vocal');
+      break;
+    case '3':
+      setCameraPreset('guitar');
+      break;
+    case '4':
+      setCameraPreset('bass');
+      break;
+    case '5':
+      setCameraPreset('drum');
+      break;
+    case '6':
+      setCameraPreset('side');
+      break;
+    case '7':
+      setCameraPreset('high');
+      break;
+  }
+});
+
 // Window resize
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
