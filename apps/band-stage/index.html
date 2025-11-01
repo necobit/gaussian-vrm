@@ -191,10 +191,56 @@
       background-color: rgba(0, 0, 0, 0.4);
       color: rgba(255, 255, 255, 0.7);
     }
+
+    /* Start Page */
+    #start-page {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    #start-page.hidden {
+      display: none;
+    }
+
+    .start-page-button {
+      padding: 24px 64px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      border: 3px solid #FFD700;
+      border-radius: 12px;
+      font-size: 32px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+
+    .start-page-button:hover {
+      background-color: rgba(255, 215, 0, 0.2);
+      border-color: #FFF;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+      transform: scale(1.05);
+    }
   </style>
 </head>
 
 <body>
+  <!-- Start Page -->
+  <div id="start-page">
+    <button class="start-page-button" onclick="showMemberSelection()">🎸 演奏する 🥁</button>
+  </div>
+
   <div id="info">
     FPS: <span id="fpsdisplay" style="display: inline;"></span><br>
     <span id="midi-status" style="color: #888; font-size: 11px;">MIDI: Not initialized</span>
@@ -236,26 +282,26 @@
 
   <button class="home-button" onclick="window.location.href='../../index.html'">← Home</button>
 
-  <div id="selection-modal">
-    <div class="selection-title">🎸 Select Your Band Members 🥁</div>
+  <div id="selection-modal" class="hidden">
+    <div class="selection-title">イカれたメンバーを選んでくれ</div>
 
     <div class="part-selection">
-      <div class="part-label">Vocal (Always Visible)</div>
+      <div class="part-label">🎤 狂気のボーカル</div>
       <div class="avatar-grid" id="vocal-grid"></div>
     </div>
 
     <div class="part-selection">
-      <div class="part-label">Guitar (Channel 1)</div>
+      <div class="part-label">🔥 炎のギタリスト</div>
       <div class="avatar-grid" id="guitar-grid"></div>
     </div>
 
     <div class="part-selection">
-      <div class="part-label">Bass (Channel 4)</div>
+      <div class="part-label">❄️ 氷のベーシスト</div>
       <div class="avatar-grid" id="bass-grid"></div>
     </div>
 
     <div class="part-selection">
-      <div class="part-label">Drum (Channel 10)</div>
+      <div class="part-label">🌑 漆黒のドラマー</div>
       <div class="avatar-grid" id="drum-grid"></div>
     </div>
 

@@ -1314,3 +1314,18 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// Show member selection page (called from start page button)
+window.showMemberSelection = function() {
+  const startPage = document.getElementById('start-page');
+  const selectionModal = document.getElementById('selection-modal');
+
+  if (startPage) {
+    startPage.classList.add('hidden');
+  }
+  if (selectionModal) {
+    selectionModal.classList.remove('hidden');
+  }
+
+  console.log('[UI] Showing member selection page');
+};
