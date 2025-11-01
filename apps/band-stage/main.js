@@ -430,6 +430,24 @@ function setCameraPreset(presetName) {
   console.log(`Camera: ${presetName}`);
 }
 
+function setRandomCamera() {
+  // Random position within visible range
+  const x = (Math.random() - 0.5) * 10; // -5 to 5
+  const y = 1 + Math.random() * 2.5; // 1 to 3.5
+  const z = 2 + Math.random() * 4; // 2 to 6
+
+  // Target center of stage with slight variation
+  const targetX = (Math.random() - 0.5) * 2; // -1 to 1
+  const targetY = 0.8 + Math.random() * 0.8; // 0.8 to 1.6
+  const targetZ = -0.5 + (Math.random() - 0.5) * 1; // -1 to 0
+
+  camera.position.set(x, y, z);
+  controls.target.set(targetX, targetY, targetZ);
+  controls.update();
+
+  console.log(`Camera: Random (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`);
+}
+
 // Keyboard controls for camera
 window.addEventListener('keydown', (event) => {
   switch(event.key) {
@@ -453,6 +471,10 @@ window.addEventListener('keydown', (event) => {
       break;
     case '7':
       setCameraPreset('high');
+      break;
+    case 'r':
+    case 'R':
+      setRandomCamera();
       break;
   }
 });
