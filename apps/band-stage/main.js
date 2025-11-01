@@ -266,6 +266,8 @@ class InstrumentSyncEffect {
     this.currentTargetIndex = 0;
     this.lastTapTime = null;
     this.lastTriggerTime = null; // Last time onMidiTrigger was called
+    this.isPlaying = false; // Track if animation should be playing
+    this.stopMarginFrames = 0.5; // Stop 0.5 frames before next target
   }
 
   // Get frame count to next target
@@ -337,20 +339,59 @@ class InstrumentSyncEffect {
           `ideal time: ${idealTime.toFixed(0)}ms, ` +
           `timeScale: ${clampedTimeScale.toFixed(3)}`
       );
+    } else {
+      // First tap: use default timeScale
+      action.timeScale = 1.0;
+      console.log(`[Sync] First tap, using default timeScale: 1.0`);
     }
 
     // Update last tap time
     this.lastTapTime = now;
+
+    // Resume playing
+    this.isPlaying = true;
 
     // Move to next target
     this.currentTargetIndex =
       (this.currentTargetIndex + 1) % this.targetFrames.length;
   }
 
+  // Update method to stop animation before next target
+  update() {
+    if (!this.isPlaying || !this.gvrm || !this.gvrm.character || !this.gvrm.character.action) {
+      return;
+    }
+
+    const action = this.gvrm.character.action;
+    const currentFrame = action.time * this.fps;
+
+    // Get next target frame
+    const nextTargetFrame = this.targetFrames[this.currentTargetIndex];
+
+    // Calculate distance to next target (handle wrap-around)
+    let distanceToNext;
+    if (nextTargetFrame < currentFrame) {
+      // Wrap-around case
+      distanceToNext = this.totalFrames - currentFrame + nextTargetFrame;
+    } else {
+      distanceToNext = nextTargetFrame - currentFrame;
+    }
+
+    // Stop if we're within stopMarginFrames of the next target
+    if (distanceToNext <= this.stopMarginFrames) {
+      action.timeScale = 0;
+      this.isPlaying = false;
+      console.log(
+        `[Sync] Stopped at frame ${currentFrame.toFixed(1)}, waiting for next MIDI (${distanceToNext.toFixed(2)} frames before target ${nextTargetFrame})`
+      );
+    }
+  }
+
   reset() {
     this.currentTargetIndex = 0;
     this.lastTapTime = null;
     this.lastTriggerTime = null;
+    this.isPlaying = false;
     if (this.gvrm && this.gvrm.character && this.gvrm.character.action) {
       this.gvrm.character.action.timeScale = 1.0;
     }
@@ -1110,6 +1151,17 @@ function animate() {
   }
   if (shatterEffects.drum && shatterEffects.drum.isActive) {
     shatterEffects.drum.update(deltaTime);
+  }
+
+  // Update sync effects (stop animation before next target)
+  if (syncEffects.guitar) {
+    syncEffects.guitar.update();
+  }
+  if (syncEffects.bass) {
+    syncEffects.bass.update();
+  }
+  if (syncEffects.drum) {
+    syncEffects.drum.update();
   }
 
   // Update avatars (skip if shatter effect is active)
