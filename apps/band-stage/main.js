@@ -400,13 +400,16 @@ class InstrumentSyncEffect {
 
 // Appear effect when avatar appears (fall from above)
 class AppearEffect {
-  constructor(gvrm, targetPosition) {
+  constructor(gvrm, targetPosition, scene) {
     this.gvrm = gvrm;
     this.targetPosition = targetPosition.clone();
+    this.scene = scene;
     this.isActive = false;
     this.startTime = null;
-    this.duration = 500; // milliseconds
+    this.duration = 5000; // milliseconds (5 seconds)
     this.startY = 3; // Start 3 meters above target
+    this.light = null; // Spotlight for dramatic effect
+    this.maxLightIntensity = 10; // Very bright light
   }
 
   start() {
@@ -434,7 +437,19 @@ class AppearEffect {
       );
     }
 
-    console.log(`[Appear] Effect started - falling from above`);
+    // Create spotlight above avatar
+    if (this.scene) {
+      this.light = new THREE.PointLight(0xffffff, this.maxLightIntensity, 10);
+      this.light.position.set(
+        this.targetPosition.x,
+        this.targetPosition.y + this.startY + 2, // 2 meters above avatar
+        this.targetPosition.z
+      );
+      this.scene.add(this.light);
+      console.log(`[Appear] Spotlight created at intensity ${this.maxLightIntensity}`);
+    }
+
+    console.log(`[Appear] Effect started - falling from above with spotlight over ${this.duration}ms`);
   }
 
   update() {
@@ -459,6 +474,15 @@ class AppearEffect {
       this.gvrm.gs.viewer.position.y = currentY;
     }
 
+    // Update light position and intensity
+    if (this.light) {
+      // Light follows avatar (stays 2 meters above)
+      this.light.position.y = currentY + 2;
+
+      // Fade out light intensity as avatar descends (from max to 0)
+      this.light.intensity = this.maxLightIntensity * (1 - progress);
+    }
+
     // Check if complete
     if (progress >= 1.0) {
       this.complete();
@@ -477,6 +501,13 @@ class AppearEffect {
     }
     if (this.gvrm.gs && this.gvrm.gs.viewer) {
       this.gvrm.gs.viewer.position.y = this.targetPosition.y;
+    }
+
+    // Remove spotlight
+    if (this.light && this.scene) {
+      this.scene.remove(this.light);
+      this.light = null;
+      console.log(`[Appear] Spotlight removed`);
     }
 
     console.log(`[Appear] Effect complete`);
@@ -884,7 +915,8 @@ async function loadAvatars() {
       avatarPositions.guitar.x,
       avatarPositions.guitar.y,
       avatarPositions.guitar.z
-    )
+    ),
+    scene
   );
   appearEffects.bass = new AppearEffect(
     avatarInstances.bass,
@@ -892,7 +924,8 @@ async function loadAvatars() {
       avatarPositions.bass.x,
       avatarPositions.bass.y,
       avatarPositions.bass.z
-    )
+    ),
+    scene
   );
   appearEffects.drum = new AppearEffect(
     avatarInstances.drum,
@@ -900,7 +933,8 @@ async function loadAvatars() {
       avatarPositions.drum.x,
       avatarPositions.drum.y,
       avatarPositions.drum.z
-    )
+    ),
+    scene
   );
 
   console.log("All avatars loaded");
