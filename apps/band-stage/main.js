@@ -408,7 +408,7 @@ class AppearEffect {
     this.startTime = null;
     this.duration = 5000; // milliseconds (5 seconds)
     this.startY = 3; // Start 3 meters above target
-    this.originalBackground = null; // Store original background color
+    this.flashOverlay = null; // White flash overlay element
   }
 
   start() {
@@ -436,14 +436,21 @@ class AppearEffect {
       );
     }
 
-    // Store original background color and set to white
-    if (this.scene) {
-      this.originalBackground = this.scene.background ? this.scene.background.clone() : new THREE.Color(0x000000);
-      this.scene.background = new THREE.Color(0xffffff); // Pure white
-      console.log(`[Appear] Background set to white, original: ${this.originalBackground.getHexString()}`);
-    }
+    // Create white flash overlay
+    this.flashOverlay = document.createElement('div');
+    this.flashOverlay.style.position = 'fixed';
+    this.flashOverlay.style.top = '0';
+    this.flashOverlay.style.left = '0';
+    this.flashOverlay.style.width = '100%';
+    this.flashOverlay.style.height = '100%';
+    this.flashOverlay.style.backgroundColor = 'white';
+    this.flashOverlay.style.opacity = '1';
+    this.flashOverlay.style.pointerEvents = 'none';
+    this.flashOverlay.style.zIndex = '100';
+    document.body.appendChild(this.flashOverlay);
+    console.log(`[Appear] White flash overlay created`);
 
-    console.log(`[Appear] Effect started - falling from above with white background over ${this.duration}ms`);
+    console.log(`[Appear] Effect started - falling from above with white flash over ${this.duration}ms`);
   }
 
   update() {
@@ -468,11 +475,9 @@ class AppearEffect {
       this.gvrm.gs.viewer.position.y = currentY;
     }
 
-    // Fade background from white to original color
-    if (this.scene && this.originalBackground) {
-      const white = new THREE.Color(0xffffff);
-      // Interpolate from white (progress=0) to original (progress=1)
-      this.scene.background = white.clone().lerp(this.originalBackground, progress);
+    // Fade white flash overlay from opacity 1 to 0
+    if (this.flashOverlay) {
+      this.flashOverlay.style.opacity = (1 - progress).toString();
     }
 
     // Check if complete
@@ -495,10 +500,11 @@ class AppearEffect {
       this.gvrm.gs.viewer.position.y = this.targetPosition.y;
     }
 
-    // Restore original background color
-    if (this.scene && this.originalBackground) {
-      this.scene.background = this.originalBackground.clone();
-      console.log(`[Appear] Background restored to original: ${this.originalBackground.getHexString()}`);
+    // Remove white flash overlay
+    if (this.flashOverlay) {
+      document.body.removeChild(this.flashOverlay);
+      this.flashOverlay = null;
+      console.log(`[Appear] White flash overlay removed`);
     }
 
     console.log(`[Appear] Effect complete`);
