@@ -458,22 +458,20 @@ class ShatterEffect {
   reset() {
     this.isActive = false;
 
-    // Reset position and rotation
+    // Reset position and rotation (don't set visible here)
     if (this.gvrm.character && this.gvrm.character.currentVrm) {
       this.gvrm.character.currentVrm.scene.position.copy(this.originalPosition);
       this.gvrm.character.currentVrm.scene.rotation.set(0, 0, 0);
-      this.gvrm.character.currentVrm.scene.visible = true; // Make visible again
     }
     if (this.gvrm.gs && this.gvrm.gs.viewer) {
       this.gvrm.gs.viewer.position.copy(this.originalPosition);
       this.gvrm.gs.viewer.rotation.set(0, 0, 0);
-      this.gvrm.gs.viewer.visible = true; // Make visible again
     }
 
     this.velocity.set(0, 0, 0);
     this.angularVelocity.set(0, 0, 0);
 
-    console.log(`[Shatter] Reset complete - avatar ready to reappear`);
+    console.log(`[Shatter] Reset complete - position restored to origin`);
   }
 }
 
