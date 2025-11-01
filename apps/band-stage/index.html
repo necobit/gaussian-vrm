@@ -1,0 +1,266 @@
+<!--
+  Copyright (c) 2025 naruya
+  Licensed under the MIT License.
+  See the LICENSE file in the project root for full license information.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Band Stage - GVRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    body {
+      font-size: 14px;
+      margin: 0px;
+      display: flex;
+      overflow: hidden;
+      color: white;
+      background-color: black;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    #threejs-container {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: -1;
+    }
+
+    #info {
+      font-size: 12px;
+      top: 4px;
+      left: 8px;
+      position: absolute;
+      color: white !important;
+    }
+
+    /* Avatar Selection Modal */
+    #selection-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    #selection-modal.hidden {
+      display: none;
+    }
+
+    .selection-title {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 40px;
+      color: #4CAF50;
+    }
+
+    .part-selection {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .part-label {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: white;
+    }
+
+    .avatar-grid {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 800px;
+    }
+
+    .avatar-option {
+      width: 100px;
+      padding: 12px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .avatar-option:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(76, 175, 80, 0.5);
+    }
+
+    .avatar-option.selected {
+      background-color: rgba(76, 175, 80, 0.3);
+      border-color: #4CAF50;
+      border-width: 3px;
+    }
+
+    .avatar-option video {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .avatar-option .avatar-name {
+      font-size: 12px;
+      color: white;
+    }
+
+    .start-button {
+      padding: 16px 48px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 40px;
+      transition: background-color 0.3s;
+    }
+
+    .start-button:hover {
+      background-color: #45a049;
+    }
+
+    .start-button:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+    }
+
+    /* Status Display */
+    #status-display {
+      position: absolute;
+      top: 40px;
+      left: 8px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      max-width: 300px;
+    }
+
+    .status-item {
+      margin: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #666;
+    }
+
+    .status-indicator.active {
+      background-color: #4CAF50;
+      box-shadow: 0 0 8px #4CAF50;
+    }
+
+    .home-button {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      background-color: rgba(0, 0, 0, 0.2);
+      color: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    .home-button:hover {
+      background-color: rgba(0, 0, 0, 0.4);
+      color: rgba(255, 255, 255, 0.7);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="info">
+    FPS: <span id="fpsdisplay" style="display: inline;"></span><br>
+    <span id="midi-status" style="color: #888; font-size: 11px;">MIDI: Not initialized</span>
+  </div>
+
+  <div id="status-display">
+    <div style="font-weight: bold; margin-bottom: 12px; color: #4CAF50;">Band Members</div>
+    <div class="status-item">
+      <div class="status-indicator active" id="vocal-indicator"></div>
+      <span>Vocal: <span id="vocal-name">-</span></span>
+    </div>
+    <div class="status-item">
+      <div class="status-indicator" id="guitar-indicator"></div>
+      <span>Guitar (Ch1): <span id="guitar-name">-</span></span>
+    </div>
+    <div class="status-item">
+      <div class="status-indicator" id="bass-indicator"></div>
+      <span>Bass (Ch4): <span id="bass-name">-</span></span>
+    </div>
+    <div class="status-item">
+      <div class="status-indicator" id="drum-indicator"></div>
+      <span>Drum (Ch10): <span id="drum-name">-</span></span>
+    </div>
+  </div>
+
+  <button class="home-button" onclick="window.location.href='../../index.html'">← Home</button>
+
+  <div id="selection-modal">
+    <div class="selection-title">🎸 Select Your Band Members 🥁</div>
+
+    <div class="part-selection">
+      <div class="part-label">Vocal (Always Visible)</div>
+      <div class="avatar-grid" id="vocal-grid"></div>
+    </div>
+
+    <div class="part-selection">
+      <div class="part-label">Guitar (Channel 1)</div>
+      <div class="avatar-grid" id="guitar-grid"></div>
+    </div>
+
+    <div class="part-selection">
+      <div class="part-label">Bass (Channel 4)</div>
+      <div class="avatar-grid" id="bass-grid"></div>
+    </div>
+
+    <div class="part-selection">
+      <div class="part-label">Drum (Channel 10)</div>
+      <div class="avatar-grid" id="drum-grid"></div>
+    </div>
+
+    <button class="start-button" id="start-button" disabled>Start Performance</button>
+  </div>
+
+  <div id="threejs-container"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+      "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.1.0/lib/three-vrm.module.js",
+      "three/addons/controls/OrbitControls.js": "../../lib/OrbitControls.js",
+      "gaussian-splats-3d": "../../lib/gaussian-splats-3d.module.js",
+      "jszip": "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm"
+    }
+  }
+  </script>
+
+  <script type="module" src="./main.js"></script>
+</body>
+
+</html>
