@@ -460,10 +460,12 @@ class ShatterEffect {
 
     // Reset position and rotation (don't set visible here)
     if (this.gvrm.character && this.gvrm.character.currentVrm) {
+      console.log(`[Shatter] Resetting VRM position from ${this.gvrm.character.currentVrm.scene.position.toArray()} to ${this.originalPosition.toArray()}`);
       this.gvrm.character.currentVrm.scene.position.copy(this.originalPosition);
       this.gvrm.character.currentVrm.scene.rotation.set(0, 0, 0);
     }
     if (this.gvrm.gs && this.gvrm.gs.viewer) {
+      console.log(`[Shatter] Resetting GS position from ${this.gvrm.gs.viewer.position.toArray()} to ${this.originalPosition.toArray()}`);
       this.gvrm.gs.viewer.position.copy(this.originalPosition);
       this.gvrm.gs.viewer.rotation.set(0, 0, 0);
     }
@@ -753,8 +755,8 @@ async function initializeMIDI() {
     if (channel === 1) {
       avatarVisibility.guitar = true;
       lastMidiTime.guitar = now;
-      // Reset shatter effect if active
-      if (shatterEffects.guitar && shatterEffects.guitar.isActive) {
+      // Always reset position (whether effect is active or completed)
+      if (shatterEffects.guitar) {
         shatterEffects.guitar.reset();
       }
       if (avatarInstances.guitar) {
@@ -782,8 +784,8 @@ async function initializeMIDI() {
     if (channel === 4) {
       avatarVisibility.bass = true;
       lastMidiTime.bass = now;
-      // Reset shatter effect if active
-      if (shatterEffects.bass && shatterEffects.bass.isActive) {
+      // Always reset position (whether effect is active or completed)
+      if (shatterEffects.bass) {
         shatterEffects.bass.reset();
       }
       if (avatarInstances.bass) {
@@ -811,8 +813,8 @@ async function initializeMIDI() {
     if (channel === 10) {
       avatarVisibility.drum = true;
       lastMidiTime.drum = now;
-      // Reset shatter effect if active
-      if (shatterEffects.drum && shatterEffects.drum.isActive) {
+      // Always reset position (whether effect is active or completed)
+      if (shatterEffects.drum) {
         shatterEffects.drum.reset();
       }
       if (avatarInstances.drum) {
