@@ -1,33 +1,77 @@
 // Copyright (c) 2025 naruya
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GVRM } from '../../gvrm-format/gvrm.js';
-import { FPSCounter } from '../fps.js';
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GVRM } from "../../gvrm-format/gvrm.js";
+import { FPSCounter } from "../fps.js";
 
 // Available avatars
 const availableAvatars = [
-  { name: 'sample1', path: '../../assets/sample1.gvrm', video: '../../assets/sample1.mp4' },
-  { name: 'sample2', path: '../../assets/sample2.gvrm', video: '../../assets/sample2.mp4' },
-  { name: 'sample3', path: '../../assets/sample3.gvrm', video: '../../assets/sample3.mp4' },
-  { name: 'sample4', path: '../../assets/sample4.gvrm', video: '../../assets/sample4.mp4' },
-  { name: 'sample5', path: '../../assets/sample5.gvrm', video: '../../assets/sample5.mp4' },
-  { name: 'sample6', path: '../../assets/sample6.gvrm', video: '../../assets/sample6.mp4' },
-  { name: 'sample7', path: '../../assets/sample7.gvrm', video: '../../assets/sample7.mp4' },
-  { name: 'sample8', path: '../../assets/sample8.gvrm', video: '../../assets/sample8.mp4' },
-  { name: 'sample9', path: '../../assets/sample9.gvrm', video: '../../assets/sample9.mp4' },
-  { name: 'necobut', path: '../../samples/necobut.gvrm', video: '../../assets/sample1.mp4' },
-  { name: 'goroman', path: '../../samples/goroman.gvrm', video: '../../assets/sample1.mp4' },
+  {
+    name: "sample1",
+    path: "../../assets/sample1.gvrm",
+    video: "../../assets/sample1.mp4",
+  },
+  {
+    name: "sample2",
+    path: "../../assets/sample2.gvrm",
+    video: "../../assets/sample2.mp4",
+  },
+  {
+    name: "sample3",
+    path: "../../assets/sample3.gvrm",
+    video: "../../assets/sample3.mp4",
+  },
+  {
+    name: "sample4",
+    path: "../../assets/sample4.gvrm",
+    video: "../../assets/sample4.mp4",
+  },
+  {
+    name: "sample5",
+    path: "../../assets/sample5.gvrm",
+    video: "../../assets/sample5.mp4",
+  },
+  {
+    name: "sample6",
+    path: "../../assets/sample6.gvrm",
+    video: "../../assets/sample6.mp4",
+  },
+  {
+    name: "sample7",
+    path: "../../assets/sample7.gvrm",
+    video: "../../assets/sample7.mp4",
+  },
+  {
+    name: "sample8",
+    path: "../../assets/sample8.gvrm",
+    video: "../../assets/sample8.mp4",
+  },
+  {
+    name: "sample9",
+    path: "../../assets/sample9.gvrm",
+    video: "../../assets/sample9.mp4",
+  },
+  {
+    name: "necobut",
+    path: "../../samples/necobut.gvrm",
+    video: "../../assets/sample1.mp4",
+  },
+  {
+    name: "goroman",
+    path: "../../samples/goroman.gvrm",
+    video: "../../assets/sample1.mp4",
+  },
 ];
 
 // Animation paths
 const animations = {
-  idle: '../../assets/Idle.fbx',
-  singing: '../../assets/Singing.fbx',
-  guitar: '../../assets/Guitar Playing.fbx',
-  bass: '../../assets/Guitar Playing.fbx', // Using same as guitar for now
-  drum: '../../assets/Playing Drums.fbx'
+  idle: "../../assets/Idle.fbx",
+  singing: "../../assets/Singing.fbx",
+  guitar: "../../assets/Guitar Playing.fbx",
+  bass: "../../assets/Guitar Playing.fbx", // Using same as guitar for now
+  drum: "../../assets/Playing Drums.fbx",
 };
 
 // Selected avatars for each part
@@ -35,7 +79,7 @@ const selectedAvatars = {
   vocal: null,
   guitar: null,
   bass: null,
-  drum: null
+  drum: null,
 };
 
 // GVRM instances
@@ -43,7 +87,7 @@ const avatarInstances = {
   vocal: null,
   guitar: null,
   bass: null,
-  drum: null
+  drum: null,
 };
 
 // Avatar positions on stage
@@ -51,7 +95,7 @@ const avatarPositions = {
   vocal: { x: 0, y: 0, z: 0 },
   guitar: { x: -2, y: 0, z: -1 },
   bass: { x: 2, y: 0, z: -1 },
-  drum: { x: 0, y: 0, z: -2.5 }
+  drum: { x: 0, y: 0, z: -2.5 },
 };
 
 // Visibility state
@@ -59,18 +103,18 @@ const avatarVisibility = {
   vocal: true,
   guitar: false,
   bass: false,
-  drum: false
+  drum: false,
 };
 
 // Last MIDI input time for each avatar (for timeout)
 const lastMidiTime = {
   guitar: null,
   bass: null,
-  drum: null
+  drum: null,
 };
 
-// Timeout duration (3 seconds)
-const MIDI_TIMEOUT = 3000;
+// Timeout duration (2 seconds)
+const MIDI_TIMEOUT = 2000;
 
 // Vocal animation state
 let vocalIsSinging = false;
@@ -79,14 +123,14 @@ let vocalIsSinging = false;
 const syncEffects = {
   guitar: null,
   bass: null,
-  drum: null
+  drum: null,
 };
 
 // Shatter effects for each instrument
 const shatterEffects = {
   guitar: null,
   bass: null,
-  drum: null
+  drum: null,
 };
 
 // BLE MIDI Handler
@@ -141,7 +185,8 @@ class BandStageMidiHandler {
     }
 
     this.connectedInput = input;
-    this.connectedInput.onmidimessage = (message) => this.onMIDIMessage(message);
+    this.connectedInput.onmidimessage = (message) =>
+      this.onMIDIMessage(message);
     this.isConnected = true;
 
     console.log(`Connected to ${input.name}`);
@@ -170,7 +215,9 @@ class BandStageMidiHandler {
 
     // Note On
     if (messageType === 0x90 && velocity > 0) {
-      console.log(`MIDI Note On: Ch${channel + 1}, Note ${note}, Vel ${velocity}`);
+      console.log(
+        `MIDI Note On: Ch${channel + 1}, Note ${note}, Vel ${velocity}`
+      );
 
       if (this.onChannelCallback) {
         this.onChannelCallback(channel + 1, note, velocity);
@@ -230,7 +277,7 @@ class InstrumentSyncEffect {
   // Called when MIDI note is received
   onMidiTrigger() {
     if (!this.gvrm || !this.gvrm.character || !this.gvrm.character.action) {
-      console.warn('GVRM not ready for sync');
+      console.warn("GVRM not ready for sync");
       return;
     }
 
@@ -240,7 +287,11 @@ class InstrumentSyncEffect {
     if (this.lastTriggerTime !== null) {
       const timeSinceLastTrigger = now - this.lastTriggerTime;
       if (timeSinceLastTrigger < this.debounceMs) {
-        console.log(`[Sync] Debounced: ${timeSinceLastTrigger.toFixed(1)}ms < ${this.debounceMs}ms`);
+        console.log(
+          `[Sync] Debounced: ${timeSinceLastTrigger.toFixed(1)}ms < ${
+            this.debounceMs
+          }ms`
+        );
         return;
       }
     }
@@ -256,7 +307,9 @@ class InstrumentSyncEffect {
     action.time = targetTime;
 
     console.log(
-      `[Sync] Jumped to frame ${targetFrame} (${targetTime.toFixed(3)}s), step ${this.currentTargetIndex + 1}/${this.steps}`
+      `[Sync] Jumped to frame ${targetFrame} (${targetTime.toFixed(
+        3
+      )}s), step ${this.currentTargetIndex + 1}/${this.steps}`
     );
 
     // Adjust playback speed based on tap interval
@@ -273,9 +326,9 @@ class InstrumentSyncEffect {
 
       console.log(
         `[Sync] Tap interval: ${tapInterval.toFixed(0)}ms, ` +
-        `frames to next: ${framesToNext}, ` +
-        `ideal time: ${idealTime.toFixed(0)}ms, ` +
-        `timeScale: ${clampedTimeScale.toFixed(3)}`
+          `frames to next: ${framesToNext}, ` +
+          `ideal time: ${idealTime.toFixed(0)}ms, ` +
+          `timeScale: ${clampedTimeScale.toFixed(3)}`
       );
     }
 
@@ -283,7 +336,8 @@ class InstrumentSyncEffect {
     this.lastTapTime = now;
 
     // Move to next target
-    this.currentTargetIndex = (this.currentTargetIndex + 1) % this.targetFrames.length;
+    this.currentTargetIndex =
+      (this.currentTargetIndex + 1) % this.targetFrames.length;
   }
 
   reset() {
@@ -311,7 +365,7 @@ class ShatterEffect {
 
   start() {
     if (!this.gvrm || !this.gvrm.character || !this.gvrm.character.currentVrm) {
-      console.warn('GVRM not ready for shatter effect');
+      console.warn("GVRM not ready for shatter effect");
       return;
     }
 
@@ -320,9 +374,9 @@ class ShatterEffect {
 
     // Random initial velocity (outward and slightly upward)
     this.velocity.set(
-      (Math.random() - 0.5) * 3,  // Random horizontal X
-      Math.random() * 2 + 1,       // Upward Y (1-3 m/s)
-      (Math.random() - 0.5) * 3   // Random horizontal Z
+      (Math.random() - 0.5) * 3, // Random horizontal X
+      Math.random() * 2 + 1, // Upward Y (1-3 m/s)
+      (Math.random() - 0.5) * 3 // Random horizontal Z
     );
 
     // Random angular velocity for tumbling effect
@@ -332,7 +386,9 @@ class ShatterEffect {
       (Math.random() - 0.5) * 8
     );
 
-    console.log(`[Shatter] Effect started for ${this.gvrm.character.name || 'avatar'}`);
+    console.log(
+      `[Shatter] Effect started for ${this.gvrm.character.name || "avatar"}`
+    );
   }
 
   update(deltaTime) {
@@ -359,13 +415,25 @@ class ShatterEffect {
     }
 
     // Update Gaussian Splat position to match VRM
-    if (this.gvrm.gs && this.gvrm.gs.viewer && this.gvrm.character && this.gvrm.character.currentVrm) {
-      this.gvrm.gs.viewer.position.copy(this.gvrm.character.currentVrm.scene.position);
-      this.gvrm.gs.viewer.rotation.copy(this.gvrm.character.currentVrm.scene.rotation);
+    if (
+      this.gvrm.gs &&
+      this.gvrm.gs.viewer &&
+      this.gvrm.character &&
+      this.gvrm.character.currentVrm
+    ) {
+      this.gvrm.gs.viewer.position.copy(
+        this.gvrm.character.currentVrm.scene.position
+      );
+      this.gvrm.gs.viewer.rotation.copy(
+        this.gvrm.character.currentVrm.scene.rotation
+      );
     }
 
     // Check if effect is complete (fallen below ground or duration exceeded)
-    if (this.gvrm.character.currentVrm.scene.position.y < -5 || elapsed > this.duration) {
+    if (
+      this.gvrm.character.currentVrm.scene.position.y < -5 ||
+      elapsed > this.duration
+    ) {
       this.complete();
       return true; // Effect complete
     }
@@ -394,19 +462,23 @@ class ShatterEffect {
     if (this.gvrm.character && this.gvrm.character.currentVrm) {
       this.gvrm.character.currentVrm.scene.position.copy(this.originalPosition);
       this.gvrm.character.currentVrm.scene.rotation.set(0, 0, 0);
+      this.gvrm.character.currentVrm.scene.visible = true; // Make visible again
     }
     if (this.gvrm.gs && this.gvrm.gs.viewer) {
       this.gvrm.gs.viewer.position.copy(this.originalPosition);
       this.gvrm.gs.viewer.rotation.set(0, 0, 0);
+      this.gvrm.gs.viewer.visible = true; // Make visible again
     }
 
     this.velocity.set(0, 0, 0);
     this.angularVelocity.set(0, 0, 0);
+
+    console.log(`[Shatter] Reset complete - avatar ready to reappear`);
   }
 }
 
 // Scene setup
-const container = document.getElementById('threejs-container');
+const container = document.getElementById("threejs-container");
 const scene = new THREE.Scene();
 
 // Camera
@@ -439,7 +511,8 @@ scene.add(directionalLight);
 
 // Stage background
 const textureLoader = new THREE.TextureLoader();
-const stageBackgroundUrl = 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1920&q=80';
+const stageBackgroundUrl =
+  "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1920&q=80";
 textureLoader.load(stageBackgroundUrl, (texture) => {
   scene.background = texture;
 });
@@ -448,43 +521,43 @@ textureLoader.load(stageBackgroundUrl, (texture) => {
 const fpsCounter = new FPSCounter();
 
 // UI Elements
-const vocalGrid = document.getElementById('vocal-grid');
-const guitarGrid = document.getElementById('guitar-grid');
-const bassGrid = document.getElementById('bass-grid');
-const drumGrid = document.getElementById('drum-grid');
-const startButton = document.getElementById('start-button');
-const selectionModal = document.getElementById('selection-modal');
+const vocalGrid = document.getElementById("vocal-grid");
+const guitarGrid = document.getElementById("guitar-grid");
+const bassGrid = document.getElementById("bass-grid");
+const drumGrid = document.getElementById("drum-grid");
+const startButton = document.getElementById("start-button");
+const selectionModal = document.getElementById("selection-modal");
 
 // Populate avatar grids
 function populateGrid(gridElement, partName) {
   availableAvatars.forEach((avatar) => {
-    const option = document.createElement('div');
-    option.className = 'avatar-option';
+    const option = document.createElement("div");
+    option.className = "avatar-option";
     option.dataset.part = partName;
     option.dataset.avatar = avatar.name;
 
-    const video = document.createElement('video');
+    const video = document.createElement("video");
     video.src = avatar.video;
     video.autoplay = true;
     video.loop = true;
     video.muted = true;
     video.playsInline = true;
 
-    const name = document.createElement('div');
-    name.className = 'avatar-name';
+    const name = document.createElement("div");
+    name.className = "avatar-name";
     name.textContent = avatar.name;
 
     option.appendChild(video);
     option.appendChild(name);
 
-    option.addEventListener('click', () => {
+    option.addEventListener("click", () => {
       // Deselect all options in this grid
-      gridElement.querySelectorAll('.avatar-option').forEach(opt => {
-        opt.classList.remove('selected');
+      gridElement.querySelectorAll(".avatar-option").forEach((opt) => {
+        opt.classList.remove("selected");
       });
 
       // Select this option
-      option.classList.add('selected');
+      option.classList.add("selected");
       selectedAvatars[partName] = avatar;
 
       // Update start button
@@ -496,22 +569,25 @@ function populateGrid(gridElement, partName) {
 }
 
 function updateStartButton() {
-  const allSelected = selectedAvatars.vocal && selectedAvatars.guitar &&
-                      selectedAvatars.bass && selectedAvatars.drum;
+  const allSelected =
+    selectedAvatars.vocal &&
+    selectedAvatars.guitar &&
+    selectedAvatars.bass &&
+    selectedAvatars.drum;
   startButton.disabled = !allSelected;
 }
 
-populateGrid(vocalGrid, 'vocal');
-populateGrid(guitarGrid, 'guitar');
-populateGrid(bassGrid, 'bass');
-populateGrid(drumGrid, 'drum');
+populateGrid(vocalGrid, "vocal");
+populateGrid(guitarGrid, "guitar");
+populateGrid(bassGrid, "bass");
+populateGrid(drumGrid, "drum");
 
 // Animation state
 let isAnimating = false;
 
 // Start performance
-startButton.addEventListener('click', async () => {
-  selectionModal.classList.add('hidden');
+startButton.addEventListener("click", async () => {
+  selectionModal.classList.add("hidden");
   await loadAvatars();
   await initializeMIDI();
 
@@ -523,17 +599,25 @@ startButton.addEventListener('click', async () => {
 
 // Load avatars
 async function loadAvatars() {
-  console.log('Loading avatars...');
+  console.log("Loading avatars...");
 
   // Update status display
-  document.getElementById('vocal-name').textContent = selectedAvatars.vocal.name;
-  document.getElementById('guitar-name').textContent = selectedAvatars.guitar.name;
-  document.getElementById('bass-name').textContent = selectedAvatars.bass.name;
-  document.getElementById('drum-name').textContent = selectedAvatars.drum.name;
+  document.getElementById("vocal-name").textContent =
+    selectedAvatars.vocal.name;
+  document.getElementById("guitar-name").textContent =
+    selectedAvatars.guitar.name;
+  document.getElementById("bass-name").textContent = selectedAvatars.bass.name;
+  document.getElementById("drum-name").textContent = selectedAvatars.drum.name;
 
   // Load Vocal (always visible)
   avatarInstances.vocal = new GVRM();
-  await avatarInstances.vocal.load(selectedAvatars.vocal.path, scene, camera, renderer, 'vocal');
+  await avatarInstances.vocal.load(
+    selectedAvatars.vocal.path,
+    scene,
+    camera,
+    renderer,
+    "vocal"
+  );
   await avatarInstances.vocal.changeFBX(animations.idle);
   avatarInstances.vocal.character.currentVrm.scene.position.set(
     avatarPositions.vocal.x,
@@ -543,7 +627,13 @@ async function loadAvatars() {
 
   // Load Guitar
   avatarInstances.guitar = new GVRM();
-  await avatarInstances.guitar.load(selectedAvatars.guitar.path, scene, camera, renderer, 'guitar');
+  await avatarInstances.guitar.load(
+    selectedAvatars.guitar.path,
+    scene,
+    camera,
+    renderer,
+    "guitar"
+  );
   await avatarInstances.guitar.changeFBX(animations.guitar);
   avatarInstances.guitar.character.currentVrm.scene.position.set(
     avatarPositions.guitar.x,
@@ -558,7 +648,13 @@ async function loadAvatars() {
 
   // Load Bass
   avatarInstances.bass = new GVRM();
-  await avatarInstances.bass.load(selectedAvatars.bass.path, scene, camera, renderer, 'bass');
+  await avatarInstances.bass.load(
+    selectedAvatars.bass.path,
+    scene,
+    camera,
+    renderer,
+    "bass"
+  );
   await avatarInstances.bass.changeFBX(animations.bass);
   avatarInstances.bass.character.currentVrm.scene.position.set(
     avatarPositions.bass.x,
@@ -573,7 +669,13 @@ async function loadAvatars() {
 
   // Load Drum
   avatarInstances.drum = new GVRM();
-  await avatarInstances.drum.load(selectedAvatars.drum.path, scene, camera, renderer, 'drum');
+  await avatarInstances.drum.load(
+    selectedAvatars.drum.path,
+    scene,
+    camera,
+    renderer,
+    "drum"
+  );
   await avatarInstances.drum.changeFBX(animations.drum);
   avatarInstances.drum.character.currentVrm.scene.position.set(
     avatarPositions.drum.x,
@@ -588,7 +690,11 @@ async function loadAvatars() {
 
   // Create MIDI sync effects
   // Guitar: 143 frames, 16 steps
-  syncEffects.guitar = new InstrumentSyncEffect(avatarInstances.guitar, 143, 16);
+  syncEffects.guitar = new InstrumentSyncEffect(
+    avatarInstances.guitar,
+    143,
+    16
+  );
   // Bass: 143 frames, 16 steps
   syncEffects.bass = new InstrumentSyncEffect(avatarInstances.bass, 143, 16);
   // Drum: 141 frames, 16 steps
@@ -597,20 +703,32 @@ async function loadAvatars() {
   // Create shatter effects
   shatterEffects.guitar = new ShatterEffect(
     avatarInstances.guitar,
-    new THREE.Vector3(avatarPositions.guitar.x, avatarPositions.guitar.y, avatarPositions.guitar.z)
+    new THREE.Vector3(
+      avatarPositions.guitar.x,
+      avatarPositions.guitar.y,
+      avatarPositions.guitar.z
+    )
   );
   shatterEffects.bass = new ShatterEffect(
     avatarInstances.bass,
-    new THREE.Vector3(avatarPositions.bass.x, avatarPositions.bass.y, avatarPositions.bass.z)
+    new THREE.Vector3(
+      avatarPositions.bass.x,
+      avatarPositions.bass.y,
+      avatarPositions.bass.z
+    )
   );
   shatterEffects.drum = new ShatterEffect(
     avatarInstances.drum,
-    new THREE.Vector3(avatarPositions.drum.x, avatarPositions.drum.y, avatarPositions.drum.z)
+    new THREE.Vector3(
+      avatarPositions.drum.x,
+      avatarPositions.drum.y,
+      avatarPositions.drum.z
+    )
   );
 
-  console.log('All avatars loaded');
-  console.log('MIDI sync effects initialized');
-  console.log('Shatter effects initialized');
+  console.log("All avatars loaded");
+  console.log("MIDI sync effects initialized");
+  console.log("Shatter effects initialized");
 }
 
 // Initialize MIDI
@@ -620,16 +738,18 @@ async function initializeMIDI() {
   midiHandler = new BandStageMidiHandler();
 
   midiHandler.setStatusCallback((message, connected) => {
-    const statusEl = document.getElementById('midi-status');
+    const statusEl = document.getElementById("midi-status");
     if (statusEl) {
       statusEl.textContent = message;
-      statusEl.style.color = connected ? '#4CAF50' : '#888';
+      statusEl.style.color = connected ? "#4CAF50" : "#888";
     }
   });
 
   midiHandler.setChannelCallback(async (channel, note, velocity) => {
     const now = performance.now();
-    console.log(`[MIDI] Ch${channel} Note ${note} Vel ${velocity} at ${now.toFixed(0)}ms`);
+    console.log(
+      `[MIDI] Ch${channel} Note ${note} Vel ${velocity} at ${now.toFixed(0)}ms`
+    );
 
     // Channel 1: Guitar
     if (channel === 1) {
@@ -641,14 +761,17 @@ async function initializeMIDI() {
       }
       if (avatarInstances.guitar) {
         // Show VRM scene
-        if (avatarInstances.guitar.character && avatarInstances.guitar.character.currentVrm) {
+        if (
+          avatarInstances.guitar.character &&
+          avatarInstances.guitar.character.currentVrm
+        ) {
           avatarInstances.guitar.character.currentVrm.scene.visible = true;
         }
         // Show Gaussian Splat viewer
         if (avatarInstances.guitar.gs && avatarInstances.guitar.gs.viewer) {
           avatarInstances.guitar.gs.viewer.visible = true;
         }
-        document.getElementById('guitar-indicator').classList.add('active');
+        document.getElementById("guitar-indicator").classList.add("active");
       }
       // Trigger MIDI sync
       if (syncEffects.guitar) {
@@ -667,14 +790,17 @@ async function initializeMIDI() {
       }
       if (avatarInstances.bass) {
         // Show VRM scene
-        if (avatarInstances.bass.character && avatarInstances.bass.character.currentVrm) {
+        if (
+          avatarInstances.bass.character &&
+          avatarInstances.bass.character.currentVrm
+        ) {
           avatarInstances.bass.character.currentVrm.scene.visible = true;
         }
         // Show Gaussian Splat viewer
         if (avatarInstances.bass.gs && avatarInstances.bass.gs.viewer) {
           avatarInstances.bass.gs.viewer.visible = true;
         }
-        document.getElementById('bass-indicator').classList.add('active');
+        document.getElementById("bass-indicator").classList.add("active");
       }
       // Trigger MIDI sync
       if (syncEffects.bass) {
@@ -693,14 +819,17 @@ async function initializeMIDI() {
       }
       if (avatarInstances.drum) {
         // Show VRM scene
-        if (avatarInstances.drum.character && avatarInstances.drum.character.currentVrm) {
+        if (
+          avatarInstances.drum.character &&
+          avatarInstances.drum.character.currentVrm
+        ) {
           avatarInstances.drum.character.currentVrm.scene.visible = true;
         }
         // Show Gaussian Splat viewer
         if (avatarInstances.drum.gs && avatarInstances.drum.gs.viewer) {
           avatarInstances.drum.gs.viewer.visible = true;
         }
-        document.getElementById('drum-indicator').classList.add('active');
+        document.getElementById("drum-indicator").classList.add("active");
       }
       // Trigger MIDI sync
       if (syncEffects.drum) {
@@ -714,7 +843,7 @@ async function initializeMIDI() {
       vocalIsSinging = true;
       if (avatarInstances.vocal) {
         await avatarInstances.vocal.changeFBX(animations.singing);
-        console.log('Vocal switched to Singing');
+        console.log("Vocal switched to Singing");
       }
     }
   });
@@ -736,8 +865,12 @@ function animate() {
       avatarVisibility.guitar = false;
       if (shatterEffects.guitar && !shatterEffects.guitar.isActive) {
         shatterEffects.guitar.start();
-        document.getElementById('guitar-indicator').classList.remove('active');
-        console.log(`Guitar shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`);
+        document.getElementById("guitar-indicator").classList.remove("active");
+        console.log(
+          `Guitar shatter effect started (timeout after ${elapsed.toFixed(
+            0
+          )}ms)`
+        );
       }
       lastMidiTime.guitar = null; // Reset timer
     }
@@ -750,8 +883,10 @@ function animate() {
       avatarVisibility.bass = false;
       if (shatterEffects.bass && !shatterEffects.bass.isActive) {
         shatterEffects.bass.start();
-        document.getElementById('bass-indicator').classList.remove('active');
-        console.log(`Bass shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`);
+        document.getElementById("bass-indicator").classList.remove("active");
+        console.log(
+          `Bass shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`
+        );
       }
       lastMidiTime.bass = null; // Reset timer
     }
@@ -764,19 +899,26 @@ function animate() {
       avatarVisibility.drum = false;
       if (shatterEffects.drum && !shatterEffects.drum.isActive) {
         shatterEffects.drum.start();
-        document.getElementById('drum-indicator').classList.remove('active');
-        console.log(`Drum shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`);
+        document.getElementById("drum-indicator").classList.remove("active");
+        console.log(
+          `Drum shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`
+        );
       }
       lastMidiTime.drum = null; // Reset timer
     }
   }
 
   // If all instruments are hidden, switch Vocal back to Idle
-  if (vocalIsSinging && !avatarVisibility.guitar && !avatarVisibility.bass && !avatarVisibility.drum) {
+  if (
+    vocalIsSinging &&
+    !avatarVisibility.guitar &&
+    !avatarVisibility.bass &&
+    !avatarVisibility.drum
+  ) {
     vocalIsSinging = false;
     if (avatarInstances.vocal) {
       avatarInstances.vocal.changeFBX(animations.idle);
-      console.log('Vocal switched back to Idle');
+      console.log("Vocal switched back to Idle");
     }
   }
 
@@ -794,18 +936,30 @@ function animate() {
 
   // Update avatars (skip if shatter effect is active)
   if (avatarInstances.vocal) avatarInstances.vocal.update();
-  if (avatarInstances.guitar && avatarVisibility.guitar && !shatterEffects.guitar.isActive) {
+  if (
+    avatarInstances.guitar &&
+    avatarVisibility.guitar &&
+    !shatterEffects.guitar.isActive
+  ) {
     avatarInstances.guitar.update();
   }
-  if (avatarInstances.bass && avatarVisibility.bass && !shatterEffects.bass.isActive) {
+  if (
+    avatarInstances.bass &&
+    avatarVisibility.bass &&
+    !shatterEffects.bass.isActive
+  ) {
     avatarInstances.bass.update();
   }
-  if (avatarInstances.drum && avatarVisibility.drum && !shatterEffects.drum.isActive) {
+  if (
+    avatarInstances.drum &&
+    avatarVisibility.drum &&
+    !shatterEffects.drum.isActive
+  ) {
     avatarInstances.drum.update();
   }
 
   // Update FPS
-  const fpsdisplay = document.getElementById('fpsdisplay');
+  const fpsdisplay = document.getElementById("fpsdisplay");
   if (fpsdisplay && fpsCounter) {
     const fps = fpsCounter.update();
     if (fps !== undefined && fps !== null) {
@@ -821,11 +975,14 @@ function animate() {
 const cameraPresets = {
   stage: { position: { x: 0, y: 1.5, z: 5 }, target: { x: 0, y: 1, z: 0 } },
   vocal: { position: { x: 0, y: 1.6, z: 2 }, target: { x: 0, y: 1.4, z: 0 } },
-  guitar: { position: { x: -2, y: 1.6, z: 1 }, target: { x: -2, y: 1.4, z: -1 } },
+  guitar: {
+    position: { x: -2, y: 1.6, z: 1 },
+    target: { x: -2, y: 1.4, z: -1 },
+  },
   bass: { position: { x: 2, y: 1.6, z: 1 }, target: { x: 2, y: 1.4, z: -1 } },
   drum: { position: { x: 0, y: 2, z: 0.5 }, target: { x: 0, y: 1.2, z: -2.5 } },
   side: { position: { x: -4, y: 1.5, z: 0 }, target: { x: 0, y: 1, z: -1 } },
-  high: { position: { x: 0, y: 5, z: 3 }, target: { x: 0, y: 0, z: -1 } }
+  high: { position: { x: 0, y: 5, z: 3 }, target: { x: 0, y: 0, z: -1 } },
 };
 
 function setCameraPreset(presetName) {
@@ -854,42 +1011,44 @@ function setRandomCamera() {
   controls.target.set(targetX, targetY, targetZ);
   controls.update();
 
-  console.log(`Camera: Random (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`);
+  console.log(
+    `Camera: Random (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`
+  );
 }
 
 // Keyboard controls for camera
-window.addEventListener('keydown', (event) => {
-  switch(event.key) {
-    case '1':
-      setCameraPreset('stage');
+window.addEventListener("keydown", (event) => {
+  switch (event.key) {
+    case "1":
+      setCameraPreset("stage");
       break;
-    case '2':
-      setCameraPreset('vocal');
+    case "2":
+      setCameraPreset("vocal");
       break;
-    case '3':
-      setCameraPreset('guitar');
+    case "3":
+      setCameraPreset("guitar");
       break;
-    case '4':
-      setCameraPreset('bass');
+    case "4":
+      setCameraPreset("bass");
       break;
-    case '5':
-      setCameraPreset('drum');
+    case "5":
+      setCameraPreset("drum");
       break;
-    case '6':
-      setCameraPreset('side');
+    case "6":
+      setCameraPreset("side");
       break;
-    case '7':
-      setCameraPreset('high');
+    case "7":
+      setCameraPreset("high");
       break;
-    case 'r':
-    case 'R':
+    case "r":
+    case "R":
       setRandomCamera();
       break;
   }
 });
 
 // Window resize
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
