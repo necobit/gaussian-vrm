@@ -69,14 +69,21 @@ const lastMidiTime = {
   drum: null
 };
 
-// Timeout duration (1 second)
-const MIDI_TIMEOUT = 1000;
+// Timeout duration (3 seconds)
+const MIDI_TIMEOUT = 3000;
 
 // Vocal animation state
 let vocalIsSinging = false;
 
 // MIDI sync effects for each instrument
 const syncEffects = {
+  guitar: null,
+  bass: null,
+  drum: null
+};
+
+// Shatter effects for each instrument
+const shatterEffects = {
   guitar: null,
   bass: null,
   drum: null
@@ -289,6 +296,115 @@ class InstrumentSyncEffect {
   }
 }
 
+// Shatter and fall effect when avatar disappears
+class ShatterEffect {
+  constructor(gvrm, originalPosition) {
+    this.gvrm = gvrm;
+    this.originalPosition = originalPosition.clone();
+    this.isActive = false;
+    this.velocity = new THREE.Vector3();
+    this.angularVelocity = new THREE.Vector3();
+    this.gravity = -9.8; // m/s^2
+    this.startTime = null;
+    this.duration = 1.5; // Effect duration in seconds
+  }
+
+  start() {
+    if (!this.gvrm || !this.gvrm.character || !this.gvrm.character.currentVrm) {
+      console.warn('GVRM not ready for shatter effect');
+      return;
+    }
+
+    this.isActive = true;
+    this.startTime = performance.now();
+
+    // Random initial velocity (outward and slightly upward)
+    this.velocity.set(
+      (Math.random() - 0.5) * 3,  // Random horizontal X
+      Math.random() * 2 + 1,       // Upward Y (1-3 m/s)
+      (Math.random() - 0.5) * 3   // Random horizontal Z
+    );
+
+    // Random angular velocity for tumbling effect
+    this.angularVelocity.set(
+      (Math.random() - 0.5) * 8,
+      (Math.random() - 0.5) * 8,
+      (Math.random() - 0.5) * 8
+    );
+
+    console.log(`[Shatter] Effect started for ${this.gvrm.character.name || 'avatar'}`);
+  }
+
+  update(deltaTime) {
+    if (!this.isActive) return false;
+
+    const elapsed = (performance.now() - this.startTime) / 1000; // seconds
+
+    // Apply gravity to velocity
+    this.velocity.y += this.gravity * deltaTime;
+
+    // Update VRM position
+    if (this.gvrm.character && this.gvrm.character.currentVrm) {
+      const vrmScene = this.gvrm.character.currentVrm.scene;
+
+      // Apply velocity to position
+      vrmScene.position.x += this.velocity.x * deltaTime;
+      vrmScene.position.y += this.velocity.y * deltaTime;
+      vrmScene.position.z += this.velocity.z * deltaTime;
+
+      // Apply angular velocity to rotation
+      vrmScene.rotation.x += this.angularVelocity.x * deltaTime;
+      vrmScene.rotation.y += this.angularVelocity.y * deltaTime;
+      vrmScene.rotation.z += this.angularVelocity.z * deltaTime;
+    }
+
+    // Update Gaussian Splat position to match VRM
+    if (this.gvrm.gs && this.gvrm.gs.viewer && this.gvrm.character && this.gvrm.character.currentVrm) {
+      this.gvrm.gs.viewer.position.copy(this.gvrm.character.currentVrm.scene.position);
+      this.gvrm.gs.viewer.rotation.copy(this.gvrm.character.currentVrm.scene.rotation);
+    }
+
+    // Check if effect is complete (fallen below ground or duration exceeded)
+    if (this.gvrm.character.currentVrm.scene.position.y < -5 || elapsed > this.duration) {
+      this.complete();
+      return true; // Effect complete
+    }
+
+    return false; // Effect still running
+  }
+
+  complete() {
+    this.isActive = false;
+
+    // Hide avatar
+    if (this.gvrm.character && this.gvrm.character.currentVrm) {
+      this.gvrm.character.currentVrm.scene.visible = false;
+    }
+    if (this.gvrm.gs && this.gvrm.gs.viewer) {
+      this.gvrm.gs.viewer.visible = false;
+    }
+
+    console.log(`[Shatter] Effect complete`);
+  }
+
+  reset() {
+    this.isActive = false;
+
+    // Reset position and rotation
+    if (this.gvrm.character && this.gvrm.character.currentVrm) {
+      this.gvrm.character.currentVrm.scene.position.copy(this.originalPosition);
+      this.gvrm.character.currentVrm.scene.rotation.set(0, 0, 0);
+    }
+    if (this.gvrm.gs && this.gvrm.gs.viewer) {
+      this.gvrm.gs.viewer.position.copy(this.originalPosition);
+      this.gvrm.gs.viewer.rotation.set(0, 0, 0);
+    }
+
+    this.velocity.set(0, 0, 0);
+    this.angularVelocity.set(0, 0, 0);
+  }
+}
+
 // Scene setup
 const container = document.getElementById('threejs-container');
 const scene = new THREE.Scene();
@@ -478,8 +594,23 @@ async function loadAvatars() {
   // Drum: 141 frames, 16 steps
   syncEffects.drum = new InstrumentSyncEffect(avatarInstances.drum, 141, 16);
 
+  // Create shatter effects
+  shatterEffects.guitar = new ShatterEffect(
+    avatarInstances.guitar,
+    new THREE.Vector3(avatarPositions.guitar.x, avatarPositions.guitar.y, avatarPositions.guitar.z)
+  );
+  shatterEffects.bass = new ShatterEffect(
+    avatarInstances.bass,
+    new THREE.Vector3(avatarPositions.bass.x, avatarPositions.bass.y, avatarPositions.bass.z)
+  );
+  shatterEffects.drum = new ShatterEffect(
+    avatarInstances.drum,
+    new THREE.Vector3(avatarPositions.drum.x, avatarPositions.drum.y, avatarPositions.drum.z)
+  );
+
   console.log('All avatars loaded');
   console.log('MIDI sync effects initialized');
+  console.log('Shatter effects initialized');
 }
 
 // Initialize MIDI
@@ -504,6 +635,10 @@ async function initializeMIDI() {
     if (channel === 1) {
       avatarVisibility.guitar = true;
       lastMidiTime.guitar = now;
+      // Reset shatter effect if active
+      if (shatterEffects.guitar && shatterEffects.guitar.isActive) {
+        shatterEffects.guitar.reset();
+      }
       if (avatarInstances.guitar) {
         // Show VRM scene
         if (avatarInstances.guitar.character && avatarInstances.guitar.character.currentVrm) {
@@ -526,6 +661,10 @@ async function initializeMIDI() {
     if (channel === 4) {
       avatarVisibility.bass = true;
       lastMidiTime.bass = now;
+      // Reset shatter effect if active
+      if (shatterEffects.bass && shatterEffects.bass.isActive) {
+        shatterEffects.bass.reset();
+      }
       if (avatarInstances.bass) {
         // Show VRM scene
         if (avatarInstances.bass.character && avatarInstances.bass.character.currentVrm) {
@@ -548,6 +687,10 @@ async function initializeMIDI() {
     if (channel === 10) {
       avatarVisibility.drum = true;
       lastMidiTime.drum = now;
+      // Reset shatter effect if active
+      if (shatterEffects.drum && shatterEffects.drum.isActive) {
+        shatterEffects.drum.reset();
+      }
       if (avatarInstances.drum) {
         // Show VRM scene
         if (avatarInstances.drum.character && avatarInstances.drum.character.currentVrm) {
@@ -591,17 +734,10 @@ function animate() {
     const elapsed = now - lastMidiTime.guitar;
     if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.guitar = false;
-      if (avatarInstances.guitar) {
-        // Hide VRM scene
-        if (avatarInstances.guitar.character && avatarInstances.guitar.character.currentVrm) {
-          avatarInstances.guitar.character.currentVrm.scene.visible = false;
-        }
-        // Hide Gaussian Splat viewer
-        if (avatarInstances.guitar.gs && avatarInstances.guitar.gs.viewer) {
-          avatarInstances.guitar.gs.viewer.visible = false;
-        }
+      if (shatterEffects.guitar && !shatterEffects.guitar.isActive) {
+        shatterEffects.guitar.start();
         document.getElementById('guitar-indicator').classList.remove('active');
-        console.log(`Guitar hidden (timeout after ${elapsed.toFixed(0)}ms)`);
+        console.log(`Guitar shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`);
       }
       lastMidiTime.guitar = null; // Reset timer
     }
@@ -612,17 +748,10 @@ function animate() {
     const elapsed = now - lastMidiTime.bass;
     if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.bass = false;
-      if (avatarInstances.bass) {
-        // Hide VRM scene
-        if (avatarInstances.bass.character && avatarInstances.bass.character.currentVrm) {
-          avatarInstances.bass.character.currentVrm.scene.visible = false;
-        }
-        // Hide Gaussian Splat viewer
-        if (avatarInstances.bass.gs && avatarInstances.bass.gs.viewer) {
-          avatarInstances.bass.gs.viewer.visible = false;
-        }
+      if (shatterEffects.bass && !shatterEffects.bass.isActive) {
+        shatterEffects.bass.start();
         document.getElementById('bass-indicator').classList.remove('active');
-        console.log(`Bass hidden (timeout after ${elapsed.toFixed(0)}ms)`);
+        console.log(`Bass shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`);
       }
       lastMidiTime.bass = null; // Reset timer
     }
@@ -633,17 +762,10 @@ function animate() {
     const elapsed = now - lastMidiTime.drum;
     if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.drum = false;
-      if (avatarInstances.drum) {
-        // Hide VRM scene
-        if (avatarInstances.drum.character && avatarInstances.drum.character.currentVrm) {
-          avatarInstances.drum.character.currentVrm.scene.visible = false;
-        }
-        // Hide Gaussian Splat viewer
-        if (avatarInstances.drum.gs && avatarInstances.drum.gs.viewer) {
-          avatarInstances.drum.gs.viewer.visible = false;
-        }
+      if (shatterEffects.drum && !shatterEffects.drum.isActive) {
+        shatterEffects.drum.start();
         document.getElementById('drum-indicator').classList.remove('active');
-        console.log(`Drum hidden (timeout after ${elapsed.toFixed(0)}ms)`);
+        console.log(`Drum shatter effect started (timeout after ${elapsed.toFixed(0)}ms)`);
       }
       lastMidiTime.drum = null; // Reset timer
     }
@@ -658,11 +780,29 @@ function animate() {
     }
   }
 
-  // Update avatars
+  // Update shatter effects
+  const deltaTime = 1 / 60; // Assuming 60fps, can be calculated from actual frame time
+  if (shatterEffects.guitar && shatterEffects.guitar.isActive) {
+    shatterEffects.guitar.update(deltaTime);
+  }
+  if (shatterEffects.bass && shatterEffects.bass.isActive) {
+    shatterEffects.bass.update(deltaTime);
+  }
+  if (shatterEffects.drum && shatterEffects.drum.isActive) {
+    shatterEffects.drum.update(deltaTime);
+  }
+
+  // Update avatars (skip if shatter effect is active)
   if (avatarInstances.vocal) avatarInstances.vocal.update();
-  if (avatarInstances.guitar && avatarVisibility.guitar) avatarInstances.guitar.update();
-  if (avatarInstances.bass && avatarVisibility.bass) avatarInstances.bass.update();
-  if (avatarInstances.drum && avatarVisibility.drum) avatarInstances.drum.update();
+  if (avatarInstances.guitar && avatarVisibility.guitar && !shatterEffects.guitar.isActive) {
+    avatarInstances.guitar.update();
+  }
+  if (avatarInstances.bass && avatarVisibility.bass && !shatterEffects.bass.isActive) {
+    avatarInstances.bass.update();
+  }
+  if (avatarInstances.drum && avatarVisibility.drum && !shatterEffects.drum.isActive) {
+    avatarInstances.drum.update();
+  }
 
   // Update FPS
   const fpsdisplay = document.getElementById('fpsdisplay');
