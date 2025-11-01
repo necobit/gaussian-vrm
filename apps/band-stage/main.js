@@ -266,12 +266,19 @@ populateGrid(guitarGrid, 'guitar');
 populateGrid(bassGrid, 'bass');
 populateGrid(drumGrid, 'drum');
 
+// Animation state
+let isAnimating = false;
+
 // Start performance
 startButton.addEventListener('click', async () => {
   selectionModal.classList.add('hidden');
   await loadAvatars();
-  initializeMIDI();
-  animate();
+  await initializeMIDI();
+
+  if (!isAnimating) {
+    isAnimating = true;
+    animate();
+  }
 });
 
 // Load avatars
@@ -390,8 +397,11 @@ function animate() {
 
   // Update FPS
   const fpsdisplay = document.getElementById('fpsdisplay');
-  if (fpsdisplay) {
-    fpsdisplay.textContent = fpsCounter.update().toFixed(0);
+  if (fpsdisplay && fpsCounter) {
+    const fps = fpsCounter.update();
+    if (fps !== undefined && fps !== null) {
+      fpsdisplay.textContent = fps.toFixed(0);
+    }
   }
 
   controls.update();
