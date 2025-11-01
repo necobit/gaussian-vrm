@@ -364,13 +364,13 @@ class AppearEffect {
     this.targetPosition = targetPosition.clone();
     this.isActive = false;
     this.startTime = null;
-    this.duration = 200; // milliseconds
+    this.duration = 500; // milliseconds
     this.startY = 3; // Start 3 meters above target
   }
 
   start() {
     if (!this.gvrm || !this.gvrm.character || !this.gvrm.character.currentVrm) {
-      console.warn('GVRM not ready for appear effect');
+      console.warn("GVRM not ready for appear effect");
       return;
     }
 
@@ -553,12 +553,20 @@ class ShatterEffect {
 
     // Reset position and rotation (don't set visible here)
     if (this.gvrm.character && this.gvrm.character.currentVrm) {
-      console.log(`[Shatter] Resetting VRM position from ${this.gvrm.character.currentVrm.scene.position.toArray()} to ${this.originalPosition.toArray()}`);
+      console.log(
+        `[Shatter] Resetting VRM position from ${this.gvrm.character.currentVrm.scene.position.toArray()} to ${this.originalPosition.toArray()}`
+      );
       this.gvrm.character.currentVrm.scene.position.copy(this.originalPosition);
-      this.gvrm.character.currentVrm.scene.rotation.set(0, this.originalRotationY, 0);
+      this.gvrm.character.currentVrm.scene.rotation.set(
+        0,
+        this.originalRotationY,
+        0
+      );
     }
     if (this.gvrm.gs && this.gvrm.gs.viewer) {
-      console.log(`[Shatter] Resetting GS position from ${this.gvrm.gs.viewer.position.toArray()} to ${this.originalPosition.toArray()}`);
+      console.log(
+        `[Shatter] Resetting GS position from ${this.gvrm.gs.viewer.position.toArray()} to ${this.originalPosition.toArray()}`
+      );
       this.gvrm.gs.viewer.position.copy(this.originalPosition);
       this.gvrm.gs.viewer.rotation.set(0, this.originalRotationY, 0);
     }
