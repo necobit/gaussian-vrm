@@ -75,6 +75,13 @@ const MIDI_TIMEOUT = 1000;
 // Vocal animation state
 let vocalIsSinging = false;
 
+// MIDI sync effects for each instrument
+const syncEffects = {
+  guitar: null,
+  bass: null,
+  drum: null
+};
+
 // BLE MIDI Handler
 class BandStageMidiHandler {
   constructor() {
@@ -175,6 +182,93 @@ class BandStageMidiHandler {
   updateStatus(message, connected) {
     if (this.onStatusChange) {
       this.onStatusChange(message, connected);
+    }
+  }
+}
+
+// Instrument animation sync effect
+class InstrumentSyncEffect {
+  constructor(gvrm, totalFrames, steps, fps = 30) {
+    this.gvrm = gvrm;
+    this.totalFrames = totalFrames;
+    this.steps = steps;
+    this.fps = fps;
+
+    // Calculate target frames (0-indexed)
+    this.targetFrames = [];
+    for (let i = 0; i < steps; i++) {
+      const frame = Math.round((totalFrames / steps) * i);
+      this.targetFrames.push(frame);
+    }
+
+    this.currentTargetIndex = 0;
+    this.lastTapTime = null;
+  }
+
+  // Get frame count to next target
+  getFramesToNextTarget() {
+    const currentFrame = this.targetFrames[this.currentTargetIndex];
+    const nextIndex = (this.currentTargetIndex + 1) % this.targetFrames.length;
+    const nextFrame = this.targetFrames[nextIndex];
+
+    // Handle wrap-around
+    if (nextFrame < currentFrame) {
+      return this.totalFrames - currentFrame + nextFrame;
+    }
+    return nextFrame - currentFrame;
+  }
+
+  // Called when MIDI note is received
+  onMidiTrigger() {
+    if (!this.gvrm || !this.gvrm.character || !this.gvrm.character.action) {
+      console.warn('GVRM not ready for sync');
+      return;
+    }
+
+    const action = this.gvrm.character.action;
+    const now = performance.now();
+
+    // Jump to current target frame
+    const targetFrame = this.targetFrames[this.currentTargetIndex];
+    const targetTime = targetFrame / this.fps;
+    action.time = targetTime;
+
+    console.log(
+      `[Sync] Jumped to frame ${targetFrame} (${targetTime.toFixed(3)}s), step ${this.currentTargetIndex + 1}/${this.steps}`
+    );
+
+    // Adjust playback speed based on tap interval
+    if (this.lastTapTime !== null) {
+      const tapInterval = now - this.lastTapTime; // milliseconds
+      const framesToNext = this.getFramesToNextTarget();
+      const idealTime = (framesToNext / this.fps) * 1000; // milliseconds
+
+      // Calculate timeScale to reach next target in one tap interval
+      const timeScale = idealTime / tapInterval;
+      const clampedTimeScale = Math.max(0.5, Math.min(2.0, timeScale));
+
+      action.timeScale = clampedTimeScale;
+
+      console.log(
+        `[Sync] Tap interval: ${tapInterval.toFixed(0)}ms, ` +
+        `frames to next: ${framesToNext}, ` +
+        `ideal time: ${idealTime.toFixed(0)}ms, ` +
+        `timeScale: ${clampedTimeScale.toFixed(3)}`
+      );
+    }
+
+    // Update last tap time
+    this.lastTapTime = now;
+
+    // Move to next target
+    this.currentTargetIndex = (this.currentTargetIndex + 1) % this.targetFrames.length;
+  }
+
+  reset() {
+    this.currentTargetIndex = 0;
+    this.lastTapTime = null;
+    if (this.gvrm && this.gvrm.character && this.gvrm.character.action) {
+      this.gvrm.character.action.timeScale = 1.0;
     }
   }
 }
@@ -360,7 +454,16 @@ async function loadAvatars() {
     avatarInstances.drum.gs.viewer.visible = false;
   }
 
+  // Create MIDI sync effects
+  // Guitar: 143 frames, 16 steps
+  syncEffects.guitar = new InstrumentSyncEffect(avatarInstances.guitar, 143, 16);
+  // Bass: 143 frames, 16 steps
+  syncEffects.bass = new InstrumentSyncEffect(avatarInstances.bass, 143, 16);
+  // Drum: 141 frames, 16 steps
+  syncEffects.drum = new InstrumentSyncEffect(avatarInstances.drum, 141, 16);
+
   console.log('All avatars loaded');
+  console.log('MIDI sync effects initialized');
 }
 
 // Initialize MIDI
@@ -396,6 +499,10 @@ async function initializeMIDI() {
         }
         document.getElementById('guitar-indicator').classList.add('active');
       }
+      // Trigger MIDI sync
+      if (syncEffects.guitar) {
+        syncEffects.guitar.onMidiTrigger();
+      }
       console.log(`Guitar timer updated: ${now.toFixed(0)}ms`);
     }
 
@@ -414,6 +521,10 @@ async function initializeMIDI() {
         }
         document.getElementById('bass-indicator').classList.add('active');
       }
+      // Trigger MIDI sync
+      if (syncEffects.bass) {
+        syncEffects.bass.onMidiTrigger();
+      }
       console.log(`Bass timer updated: ${now.toFixed(0)}ms`);
     }
 
@@ -431,6 +542,10 @@ async function initializeMIDI() {
           avatarInstances.drum.gs.viewer.visible = true;
         }
         document.getElementById('drum-indicator').classList.add('active');
+      }
+      // Trigger MIDI sync
+      if (syncEffects.drum) {
+        syncEffects.drum.onMidiTrigger();
       }
       console.log(`Drum timer updated: ${now.toFixed(0)}ms`);
     }
