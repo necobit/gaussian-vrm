@@ -366,8 +366,8 @@ async function initializeMIDI() {
   });
 
   midiHandler.setChannelCallback(async (channel, note, velocity) => {
-    console.log(`Channel ${channel} triggered`);
     const now = performance.now();
+    console.log(`[MIDI] Ch${channel} Note ${note} Vel ${velocity} at ${now.toFixed(0)}ms`);
 
     // Channel 1: Guitar
     if (channel === 1) {
@@ -377,6 +377,7 @@ async function initializeMIDI() {
         avatarInstances.guitar.character.currentVrm.scene.visible = true;
         document.getElementById('guitar-indicator').classList.add('active');
       }
+      console.log(`Guitar timer updated: ${now.toFixed(0)}ms`);
     }
 
     // Channel 4: Bass
@@ -387,6 +388,7 @@ async function initializeMIDI() {
         avatarInstances.bass.character.currentVrm.scene.visible = true;
         document.getElementById('bass-indicator').classList.add('active');
       }
+      console.log(`Bass timer updated: ${now.toFixed(0)}ms`);
     }
 
     // Channel 10: Drum
@@ -397,6 +399,7 @@ async function initializeMIDI() {
         avatarInstances.drum.character.currentVrm.scene.visible = true;
         document.getElementById('drum-indicator').classList.add('active');
       }
+      console.log(`Drum timer updated: ${now.toFixed(0)}ms`);
     }
 
     // If any instrument is playing, switch Vocal to Singing
@@ -421,37 +424,43 @@ function animate() {
 
   // Guitar timeout check
   if (avatarVisibility.guitar && lastMidiTime.guitar !== null) {
-    if (now - lastMidiTime.guitar > MIDI_TIMEOUT) {
+    const elapsed = now - lastMidiTime.guitar;
+    if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.guitar = false;
       if (avatarInstances.guitar) {
         avatarInstances.guitar.character.currentVrm.scene.visible = false;
         document.getElementById('guitar-indicator').classList.remove('active');
       }
-      console.log('Guitar hidden (timeout)');
+      lastMidiTime.guitar = null; // Reset timer
+      console.log(`Guitar hidden (timeout after ${elapsed.toFixed(0)}ms)`);
     }
   }
 
   // Bass timeout check
   if (avatarVisibility.bass && lastMidiTime.bass !== null) {
-    if (now - lastMidiTime.bass > MIDI_TIMEOUT) {
+    const elapsed = now - lastMidiTime.bass;
+    if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.bass = false;
       if (avatarInstances.bass) {
         avatarInstances.bass.character.currentVrm.scene.visible = false;
         document.getElementById('bass-indicator').classList.remove('active');
       }
-      console.log('Bass hidden (timeout)');
+      lastMidiTime.bass = null; // Reset timer
+      console.log(`Bass hidden (timeout after ${elapsed.toFixed(0)}ms)`);
     }
   }
 
   // Drum timeout check
   if (avatarVisibility.drum && lastMidiTime.drum !== null) {
-    if (now - lastMidiTime.drum > MIDI_TIMEOUT) {
+    const elapsed = now - lastMidiTime.drum;
+    if (elapsed > MIDI_TIMEOUT) {
       avatarVisibility.drum = false;
       if (avatarInstances.drum) {
         avatarInstances.drum.character.currentVrm.scene.visible = false;
         document.getElementById('drum-indicator').classList.remove('active');
       }
-      console.log('Drum hidden (timeout)');
+      lastMidiTime.drum = null; // Reset timer
+      console.log(`Drum hidden (timeout after ${elapsed.toFixed(0)}ms)`);
     }
   }
 
