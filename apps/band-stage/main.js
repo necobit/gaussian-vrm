@@ -416,7 +416,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 1.5, 5);
+camera.position.set(3, 3, 6); // Diagonal view from above
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
