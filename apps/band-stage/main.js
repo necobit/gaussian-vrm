@@ -765,6 +765,9 @@ startButton.addEventListener("click", async () => {
     isAnimating = true;
     animate();
   }
+
+  // Start auto camera work after performance begins
+  startAutoCameraWork();
 });
 
 // Load avatars
@@ -1246,6 +1249,14 @@ const cameraPresets = {
   high: { position: { x: 0, y: 5, z: 3 }, target: { x: 0, y: 0, z: -1 } },
 };
 
+// Camera shot categories
+const wideShots = ["stage", "side", "high"]; // 引きのショット (75%)
+const closeupShots = ["vocal", "guitar", "bass", "drum"]; // アップショット (25%)
+
+// Auto camera work state
+let autoCameraInterval = null;
+let isAutoCameraEnabled = false;
+
 function setCameraPreset(presetName) {
   const preset = cameraPresets[presetName];
   if (!preset) return;
@@ -1277,33 +1288,103 @@ function setRandomCamera() {
   );
 }
 
+// Auto camera work: 75% wide shots, 25% closeup shots
+function switchToAutoCameraShot() {
+  const random = Math.random();
+
+  if (random < 0.75) {
+    // 75% chance: Wide shot
+    const shot = wideShots[Math.floor(Math.random() * wideShots.length)];
+    setCameraPreset(shot);
+    console.log(`[Auto Camera] Wide shot: ${shot}`);
+  } else {
+    // 25% chance: Closeup shot
+    const shot = closeupShots[Math.floor(Math.random() * closeupShots.length)];
+    setCameraPreset(shot);
+    console.log(`[Auto Camera] Closeup shot: ${shot}`);
+  }
+}
+
+// Start auto camera work
+function startAutoCameraWork() {
+  if (isAutoCameraEnabled) return;
+
+  isAutoCameraEnabled = true;
+
+  // Switch camera every 5-8 seconds (random interval)
+  const switchCamera = () => {
+    if (!isAutoCameraEnabled) return;
+
+    switchToAutoCameraShot();
+
+    // Schedule next switch with random interval (5-8 seconds)
+    const nextInterval = 5000 + Math.random() * 3000;
+    autoCameraInterval = setTimeout(switchCamera, nextInterval);
+  };
+
+  // Start first switch after 3 seconds
+  autoCameraInterval = setTimeout(switchCamera, 3000);
+  console.log('[Auto Camera] Started');
+}
+
+// Stop auto camera work
+function stopAutoCameraWork() {
+  if (!isAutoCameraEnabled) return;
+
+  isAutoCameraEnabled = false;
+
+  if (autoCameraInterval) {
+    clearTimeout(autoCameraInterval);
+    autoCameraInterval = null;
+  }
+
+  console.log('[Auto Camera] Stopped');
+}
+
 // Keyboard controls for camera
 window.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "1":
+      stopAutoCameraWork(); // Stop auto camera when manually switching
       setCameraPreset("stage");
       break;
     case "2":
+      stopAutoCameraWork();
       setCameraPreset("vocal");
       break;
     case "3":
+      stopAutoCameraWork();
       setCameraPreset("guitar");
       break;
     case "4":
+      stopAutoCameraWork();
       setCameraPreset("bass");
       break;
     case "5":
+      stopAutoCameraWork();
       setCameraPreset("drum");
       break;
     case "6":
+      stopAutoCameraWork();
       setCameraPreset("side");
       break;
     case "7":
+      stopAutoCameraWork();
       setCameraPreset("high");
       break;
     case "r":
     case "R":
+      stopAutoCameraWork();
       setRandomCamera();
+      break;
+    case "a":
+    case "A":
+      // Toggle auto camera work
+      if (isAutoCameraEnabled) {
+        stopAutoCameraWork();
+      } else {
+        startAutoCameraWork();
+      }
       break;
   }
 });
