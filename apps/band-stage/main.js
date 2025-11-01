@@ -882,16 +882,22 @@ async function initializeMIDI() {
 
     // Channel 1: Guitar
     if (channel === 1) {
+      const wasVisible = avatarVisibility.guitar;
       avatarVisibility.guitar = true;
       lastMidiTime.guitar = now;
-      // Always reset position (whether effect is active or completed)
-      if (shatterEffects.guitar) {
-        shatterEffects.guitar.reset();
+
+      // Only start appear effect if avatar was not visible
+      if (!wasVisible) {
+        // Reset position
+        if (shatterEffects.guitar) {
+          shatterEffects.guitar.reset();
+        }
+        // Start appear effect (fall from above)
+        if (appearEffects.guitar) {
+          appearEffects.guitar.start();
+        }
       }
-      // Start appear effect (fall from above)
-      if (appearEffects.guitar) {
-        appearEffects.guitar.start();
-      }
+
       if (avatarInstances.guitar) {
         // Show VRM scene
         if (
@@ -915,16 +921,22 @@ async function initializeMIDI() {
 
     // Channel 4: Bass
     if (channel === 4) {
+      const wasVisible = avatarVisibility.bass;
       avatarVisibility.bass = true;
       lastMidiTime.bass = now;
-      // Always reset position (whether effect is active or completed)
-      if (shatterEffects.bass) {
-        shatterEffects.bass.reset();
+
+      // Only start appear effect if avatar was not visible
+      if (!wasVisible) {
+        // Reset position
+        if (shatterEffects.bass) {
+          shatterEffects.bass.reset();
+        }
+        // Start appear effect (fall from above)
+        if (appearEffects.bass) {
+          appearEffects.bass.start();
+        }
       }
-      // Start appear effect (fall from above)
-      if (appearEffects.bass) {
-        appearEffects.bass.start();
-      }
+
       if (avatarInstances.bass) {
         // Show VRM scene
         if (
@@ -948,16 +960,22 @@ async function initializeMIDI() {
 
     // Channel 10: Drum
     if (channel === 10) {
+      const wasVisible = avatarVisibility.drum;
       avatarVisibility.drum = true;
       lastMidiTime.drum = now;
-      // Always reset position (whether effect is active or completed)
-      if (shatterEffects.drum) {
-        shatterEffects.drum.reset();
+
+      // Only start appear effect if avatar was not visible
+      if (!wasVisible) {
+        // Reset position
+        if (shatterEffects.drum) {
+          shatterEffects.drum.reset();
+        }
+        // Start appear effect (fall from above)
+        if (appearEffects.drum) {
+          appearEffects.drum.start();
+        }
       }
-      // Start appear effect (fall from above)
-      if (appearEffects.drum) {
-        appearEffects.drum.start();
-      }
+
       if (avatarInstances.drum) {
         // Show VRM scene
         if (
