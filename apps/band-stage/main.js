@@ -408,8 +408,7 @@ class AppearEffect {
     this.startTime = null;
     this.duration = 5000; // milliseconds (5 seconds)
     this.startY = 3; // Start 3 meters above target
-    this.light = null; // Spotlight for dramatic effect
-    this.maxLightIntensity = 10; // Very bright light
+    this.originalBackground = null; // Store original background color
   }
 
   start() {
@@ -437,19 +436,14 @@ class AppearEffect {
       );
     }
 
-    // Create spotlight above avatar
+    // Store original background color and set to white
     if (this.scene) {
-      this.light = new THREE.PointLight(0xffffff, this.maxLightIntensity, 10);
-      this.light.position.set(
-        this.targetPosition.x,
-        this.targetPosition.y + this.startY + 2, // 2 meters above avatar
-        this.targetPosition.z
-      );
-      this.scene.add(this.light);
-      console.log(`[Appear] Spotlight created at intensity ${this.maxLightIntensity}`);
+      this.originalBackground = this.scene.background ? this.scene.background.clone() : new THREE.Color(0x000000);
+      this.scene.background = new THREE.Color(0xffffff); // Pure white
+      console.log(`[Appear] Background set to white, original: ${this.originalBackground.getHexString()}`);
     }
 
-    console.log(`[Appear] Effect started - falling from above with spotlight over ${this.duration}ms`);
+    console.log(`[Appear] Effect started - falling from above with white background over ${this.duration}ms`);
   }
 
   update() {
@@ -474,13 +468,11 @@ class AppearEffect {
       this.gvrm.gs.viewer.position.y = currentY;
     }
 
-    // Update light position and intensity
-    if (this.light) {
-      // Light follows avatar (stays 2 meters above)
-      this.light.position.y = currentY + 2;
-
-      // Fade out light intensity as avatar descends (from max to 0)
-      this.light.intensity = this.maxLightIntensity * (1 - progress);
+    // Fade background from white to original color
+    if (this.scene && this.originalBackground) {
+      const white = new THREE.Color(0xffffff);
+      // Interpolate from white (progress=0) to original (progress=1)
+      this.scene.background = white.clone().lerp(this.originalBackground, progress);
     }
 
     // Check if complete
@@ -503,11 +495,10 @@ class AppearEffect {
       this.gvrm.gs.viewer.position.y = this.targetPosition.y;
     }
 
-    // Remove spotlight
-    if (this.light && this.scene) {
-      this.scene.remove(this.light);
-      this.light = null;
-      console.log(`[Appear] Spotlight removed`);
+    // Restore original background color
+    if (this.scene && this.originalBackground) {
+      this.scene.background = this.originalBackground.clone();
+      console.log(`[Appear] Background restored to original: ${this.originalBackground.getHexString()}`);
     }
 
     console.log(`[Appear] Effect complete`);
