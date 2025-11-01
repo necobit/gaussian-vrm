@@ -24,6 +24,7 @@ const availableAvatars = [
 // Animation paths
 const animations = {
   idle: '../../assets/Idle.fbx',
+  singing: '../../assets/Singing.fbx',
   guitar: '../../assets/Guitar Playing.fbx',
   bass: '../../assets/Guitar Playing.fbx', // Using same as guitar for now
   drum: '../../assets/Playing Drums.fbx'
@@ -60,6 +61,19 @@ const avatarVisibility = {
   bass: false,
   drum: false
 };
+
+// Last MIDI input time for each avatar (for timeout)
+const lastMidiTime = {
+  guitar: null,
+  bass: null,
+  drum: null
+};
+
+// Timeout duration (1 second)
+const MIDI_TIMEOUT = 1000;
+
+// Vocal animation state
+let vocalIsSinging = false;
 
 // BLE MIDI Handler
 class BandStageMidiHandler {
@@ -351,12 +365,14 @@ async function initializeMIDI() {
     }
   });
 
-  midiHandler.setChannelCallback((channel, note, velocity) => {
+  midiHandler.setChannelCallback(async (channel, note, velocity) => {
     console.log(`Channel ${channel} triggered`);
+    const now = performance.now();
 
     // Channel 1: Guitar
     if (channel === 1) {
       avatarVisibility.guitar = true;
+      lastMidiTime.guitar = now;
       if (avatarInstances.guitar) {
         avatarInstances.guitar.character.currentVrm.scene.visible = true;
         document.getElementById('guitar-indicator').classList.add('active');
@@ -366,6 +382,7 @@ async function initializeMIDI() {
     // Channel 4: Bass
     if (channel === 4) {
       avatarVisibility.bass = true;
+      lastMidiTime.bass = now;
       if (avatarInstances.bass) {
         avatarInstances.bass.character.currentVrm.scene.visible = true;
         document.getElementById('bass-indicator').classList.add('active');
@@ -375,9 +392,19 @@ async function initializeMIDI() {
     // Channel 10: Drum
     if (channel === 10) {
       avatarVisibility.drum = true;
+      lastMidiTime.drum = now;
       if (avatarInstances.drum) {
         avatarInstances.drum.character.currentVrm.scene.visible = true;
         document.getElementById('drum-indicator').classList.add('active');
+      }
+    }
+
+    // If any instrument is playing, switch Vocal to Singing
+    if ((channel === 1 || channel === 4 || channel === 10) && !vocalIsSinging) {
+      vocalIsSinging = true;
+      if (avatarInstances.vocal) {
+        await avatarInstances.vocal.changeFBX(animations.singing);
+        console.log('Vocal switched to Singing');
       }
     }
   });
@@ -388,6 +415,54 @@ async function initializeMIDI() {
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
+
+  // Check MIDI timeout for non-vocal avatars
+  const now = performance.now();
+
+  // Guitar timeout check
+  if (avatarVisibility.guitar && lastMidiTime.guitar !== null) {
+    if (now - lastMidiTime.guitar > MIDI_TIMEOUT) {
+      avatarVisibility.guitar = false;
+      if (avatarInstances.guitar) {
+        avatarInstances.guitar.character.currentVrm.scene.visible = false;
+        document.getElementById('guitar-indicator').classList.remove('active');
+      }
+      console.log('Guitar hidden (timeout)');
+    }
+  }
+
+  // Bass timeout check
+  if (avatarVisibility.bass && lastMidiTime.bass !== null) {
+    if (now - lastMidiTime.bass > MIDI_TIMEOUT) {
+      avatarVisibility.bass = false;
+      if (avatarInstances.bass) {
+        avatarInstances.bass.character.currentVrm.scene.visible = false;
+        document.getElementById('bass-indicator').classList.remove('active');
+      }
+      console.log('Bass hidden (timeout)');
+    }
+  }
+
+  // Drum timeout check
+  if (avatarVisibility.drum && lastMidiTime.drum !== null) {
+    if (now - lastMidiTime.drum > MIDI_TIMEOUT) {
+      avatarVisibility.drum = false;
+      if (avatarInstances.drum) {
+        avatarInstances.drum.character.currentVrm.scene.visible = false;
+        document.getElementById('drum-indicator').classList.remove('active');
+      }
+      console.log('Drum hidden (timeout)');
+    }
+  }
+
+  // If all instruments are hidden, switch Vocal back to Idle
+  if (vocalIsSinging && !avatarVisibility.guitar && !avatarVisibility.bass && !avatarVisibility.drum) {
+    vocalIsSinging = false;
+    if (avatarInstances.vocal) {
+      avatarInstances.vocal.changeFBX(animations.idle);
+      console.log('Vocal switched back to Idle');
+    }
+  }
 
   // Update avatars
   if (avatarInstances.vocal) avatarInstances.vocal.update();

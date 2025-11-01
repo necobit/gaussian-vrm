@@ -9,4 +9,7 @@ BLE MIDI が送信されるデバイス名は"KANTAN-Play"
 - ch4 に MIDI Note on がきたら Bass のアバターが表示される。
 - ch10 に MIDI Note on がきたら Drum のアバターが表示される。
 
+どれかのモーションが始まったら Vocal のモーションを Singing.fbx にする。
+Vocal 以外は 1 秒以上 MIDI Note on が入力されなかったらアバターを消す。
+
 --------ひとまずここまで実装-------
