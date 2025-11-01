@@ -324,13 +324,10 @@ async function loadAvatars() {
     avatarPositions.guitar.y,
     avatarPositions.guitar.z
   );
-  // Hide VRM and Gaussian Splats
+  // Hide VRM and Gaussian Splat viewer
   avatarInstances.guitar.character.currentVrm.scene.visible = false;
-  if (avatarInstances.guitar.gsViewer) {
-    const viewers = avatarInstances.guitar.gsViewer.getViewers();
-    viewers.forEach(viewer => {
-      if (viewer.splatMesh) viewer.splatMesh.visible = false;
-    });
+  if (avatarInstances.guitar.gs && avatarInstances.guitar.gs.viewer) {
+    avatarInstances.guitar.gs.viewer.visible = false;
   }
 
   // Load Bass
@@ -342,13 +339,10 @@ async function loadAvatars() {
     avatarPositions.bass.y,
     avatarPositions.bass.z
   );
-  // Hide VRM and Gaussian Splats
+  // Hide VRM and Gaussian Splat viewer
   avatarInstances.bass.character.currentVrm.scene.visible = false;
-  if (avatarInstances.bass.gsViewer) {
-    const viewers = avatarInstances.bass.gsViewer.getViewers();
-    viewers.forEach(viewer => {
-      if (viewer.splatMesh) viewer.splatMesh.visible = false;
-    });
+  if (avatarInstances.bass.gs && avatarInstances.bass.gs.viewer) {
+    avatarInstances.bass.gs.viewer.visible = false;
   }
 
   // Load Drum
@@ -360,13 +354,10 @@ async function loadAvatars() {
     avatarPositions.drum.y,
     avatarPositions.drum.z
   );
-  // Hide VRM and Gaussian Splats
+  // Hide VRM and Gaussian Splat viewer
   avatarInstances.drum.character.currentVrm.scene.visible = false;
-  if (avatarInstances.drum.gsViewer) {
-    const viewers = avatarInstances.drum.gsViewer.getViewers();
-    viewers.forEach(viewer => {
-      if (viewer.splatMesh) viewer.splatMesh.visible = false;
-    });
+  if (avatarInstances.drum.gs && avatarInstances.drum.gs.viewer) {
+    avatarInstances.drum.gs.viewer.visible = false;
   }
 
   console.log('All avatars loaded');
@@ -399,14 +390,9 @@ async function initializeMIDI() {
         if (avatarInstances.guitar.character && avatarInstances.guitar.character.currentVrm) {
           avatarInstances.guitar.character.currentVrm.scene.visible = true;
         }
-        // Show Gaussian Splat scenes
-        if (avatarInstances.guitar.gsViewer) {
-          const viewers = avatarInstances.guitar.gsViewer.getViewers();
-          viewers.forEach(viewer => {
-            if (viewer.splatMesh) {
-              viewer.splatMesh.visible = true;
-            }
-          });
+        // Show Gaussian Splat viewer
+        if (avatarInstances.guitar.gs && avatarInstances.guitar.gs.viewer) {
+          avatarInstances.guitar.gs.viewer.visible = true;
         }
         document.getElementById('guitar-indicator').classList.add('active');
       }
@@ -422,14 +408,9 @@ async function initializeMIDI() {
         if (avatarInstances.bass.character && avatarInstances.bass.character.currentVrm) {
           avatarInstances.bass.character.currentVrm.scene.visible = true;
         }
-        // Show Gaussian Splat scenes
-        if (avatarInstances.bass.gsViewer) {
-          const viewers = avatarInstances.bass.gsViewer.getViewers();
-          viewers.forEach(viewer => {
-            if (viewer.splatMesh) {
-              viewer.splatMesh.visible = true;
-            }
-          });
+        // Show Gaussian Splat viewer
+        if (avatarInstances.bass.gs && avatarInstances.bass.gs.viewer) {
+          avatarInstances.bass.gs.viewer.visible = true;
         }
         document.getElementById('bass-indicator').classList.add('active');
       }
@@ -445,14 +426,9 @@ async function initializeMIDI() {
         if (avatarInstances.drum.character && avatarInstances.drum.character.currentVrm) {
           avatarInstances.drum.character.currentVrm.scene.visible = true;
         }
-        // Show Gaussian Splat scenes
-        if (avatarInstances.drum.gsViewer) {
-          const viewers = avatarInstances.drum.gsViewer.getViewers();
-          viewers.forEach(viewer => {
-            if (viewer.splatMesh) {
-              viewer.splatMesh.visible = true;
-            }
-          });
+        // Show Gaussian Splat viewer
+        if (avatarInstances.drum.gs && avatarInstances.drum.gs.viewer) {
+          avatarInstances.drum.gs.viewer.visible = true;
         }
         document.getElementById('drum-indicator').classList.add('active');
       }
@@ -489,14 +465,9 @@ function animate() {
         if (avatarInstances.guitar.character && avatarInstances.guitar.character.currentVrm) {
           avatarInstances.guitar.character.currentVrm.scene.visible = false;
         }
-        // Hide Gaussian Splat scenes
-        if (avatarInstances.guitar.gsViewer) {
-          const viewers = avatarInstances.guitar.gsViewer.getViewers();
-          viewers.forEach(viewer => {
-            if (viewer.splatMesh) {
-              viewer.splatMesh.visible = false;
-            }
-          });
+        // Hide Gaussian Splat viewer
+        if (avatarInstances.guitar.gs && avatarInstances.guitar.gs.viewer) {
+          avatarInstances.guitar.gs.viewer.visible = false;
         }
         document.getElementById('guitar-indicator').classList.remove('active');
         console.log(`Guitar hidden (timeout after ${elapsed.toFixed(0)}ms)`);
@@ -515,14 +486,9 @@ function animate() {
         if (avatarInstances.bass.character && avatarInstances.bass.character.currentVrm) {
           avatarInstances.bass.character.currentVrm.scene.visible = false;
         }
-        // Hide Gaussian Splat scenes
-        if (avatarInstances.bass.gsViewer) {
-          const viewers = avatarInstances.bass.gsViewer.getViewers();
-          viewers.forEach(viewer => {
-            if (viewer.splatMesh) {
-              viewer.splatMesh.visible = false;
-            }
-          });
+        // Hide Gaussian Splat viewer
+        if (avatarInstances.bass.gs && avatarInstances.bass.gs.viewer) {
+          avatarInstances.bass.gs.viewer.visible = false;
         }
         document.getElementById('bass-indicator').classList.remove('active');
         console.log(`Bass hidden (timeout after ${elapsed.toFixed(0)}ms)`);
@@ -541,14 +507,9 @@ function animate() {
         if (avatarInstances.drum.character && avatarInstances.drum.character.currentVrm) {
           avatarInstances.drum.character.currentVrm.scene.visible = false;
         }
-        // Hide Gaussian Splat scenes
-        if (avatarInstances.drum.gsViewer) {
-          const viewers = avatarInstances.drum.gsViewer.getViewers();
-          viewers.forEach(viewer => {
-            if (viewer.splatMesh) {
-              viewer.splatMesh.visible = false;
-            }
-          });
+        // Hide Gaussian Splat viewer
+        if (avatarInstances.drum.gs && avatarInstances.drum.gs.viewer) {
+          avatarInstances.drum.gs.viewer.visible = false;
         }
         document.getElementById('drum-indicator').classList.remove('active');
         console.log(`Drum hidden (timeout after ${elapsed.toFixed(0)}ms)`);
