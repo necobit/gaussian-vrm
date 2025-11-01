@@ -188,11 +188,12 @@ class BandStageMidiHandler {
 
 // Instrument animation sync effect
 class InstrumentSyncEffect {
-  constructor(gvrm, totalFrames, steps, fps = 30) {
+  constructor(gvrm, totalFrames, steps, fps = 30, debounceMs = 50) {
     this.gvrm = gvrm;
     this.totalFrames = totalFrames;
     this.steps = steps;
     this.fps = fps;
+    this.debounceMs = debounceMs; // Debounce time for chord input
 
     // Calculate target frames (0-indexed)
     this.targetFrames = [];
@@ -203,6 +204,7 @@ class InstrumentSyncEffect {
 
     this.currentTargetIndex = 0;
     this.lastTapTime = null;
+    this.lastTriggerTime = null; // Last time onMidiTrigger was called
   }
 
   // Get frame count to next target
@@ -225,8 +227,21 @@ class InstrumentSyncEffect {
       return;
     }
 
-    const action = this.gvrm.character.action;
     const now = performance.now();
+
+    // Debounce: Ignore triggers within debounceMs (for chord input)
+    if (this.lastTriggerTime !== null) {
+      const timeSinceLastTrigger = now - this.lastTriggerTime;
+      if (timeSinceLastTrigger < this.debounceMs) {
+        console.log(`[Sync] Debounced: ${timeSinceLastTrigger.toFixed(1)}ms < ${this.debounceMs}ms`);
+        return;
+      }
+    }
+
+    // Update last trigger time
+    this.lastTriggerTime = now;
+
+    const action = this.gvrm.character.action;
 
     // Jump to current target frame
     const targetFrame = this.targetFrames[this.currentTargetIndex];
@@ -267,6 +282,7 @@ class InstrumentSyncEffect {
   reset() {
     this.currentTargetIndex = 0;
     this.lastTapTime = null;
+    this.lastTriggerTime = null;
     if (this.gvrm && this.gvrm.character && this.gvrm.character.action) {
       this.gvrm.character.action.timeScale = 1.0;
     }
