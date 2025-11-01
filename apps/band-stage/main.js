@@ -777,8 +777,7 @@ startButton.addEventListener("click", async () => {
     animate();
   }
 
-  // Start auto camera work after performance begins
-  startAutoCameraWork();
+  // Auto camera will start when all members are visible (checked in animate loop)
 });
 
 // Load avatars
@@ -1175,6 +1174,11 @@ function animate() {
     }
   }
 
+  // Start auto camera work when all members are visible (only once)
+  if (!autoCameraStarted && areAllMembersVisible()) {
+    startAutoCameraWork();
+  }
+
   // Update appear effects
   if (appearEffects.guitar && appearEffects.guitar.isActive) {
     appearEffects.guitar.update();
@@ -1267,6 +1271,7 @@ const closeupShots = ["vocal", "guitar", "bass", "drum"]; // アップショッ�
 // Auto camera work state
 let autoCameraInterval = null;
 let isAutoCameraEnabled = false;
+let autoCameraStarted = false; // Track if auto camera has been started once
 
 function setCameraPreset(presetName) {
   const preset = cameraPresets[presetName];
@@ -1316,11 +1321,22 @@ function switchToAutoCameraShot() {
   }
 }
 
+// Check if all band members are visible
+function areAllMembersVisible() {
+  return (
+    avatarVisibility.vocal &&
+    avatarVisibility.guitar &&
+    avatarVisibility.bass &&
+    avatarVisibility.drum
+  );
+}
+
 // Start auto camera work
 function startAutoCameraWork() {
   if (isAutoCameraEnabled) return;
 
   isAutoCameraEnabled = true;
+  autoCameraStarted = true;
 
   // Switch camera every 5-8 seconds (random interval)
   const switchCamera = () => {
@@ -1335,7 +1351,7 @@ function startAutoCameraWork() {
 
   // Start first switch immediately
   autoCameraInterval = setTimeout(switchCamera, 100);
-  console.log("[Auto Camera] Started");
+  console.log("[Auto Camera] Started - all members visible");
 }
 
 // Stop auto camera work
