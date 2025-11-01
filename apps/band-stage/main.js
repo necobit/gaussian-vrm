@@ -1333,8 +1333,8 @@ function startAutoCameraWork() {
     autoCameraInterval = setTimeout(switchCamera, nextInterval);
   };
 
-  // Start first switch after 3 seconds
-  autoCameraInterval = setTimeout(switchCamera, 3000);
+  // Start first switch immediately
+  autoCameraInterval = setTimeout(switchCamera, 100);
   console.log("[Auto Camera] Started");
 }
 
